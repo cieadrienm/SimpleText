@@ -60,4 +60,10 @@ SIMPLETEXT_SNAPSHOT_WINDOW=about .build/debug/SimpleText --snapshot /tmp/a.png  
 
 ## Crédits
 
-**Adrien Mondot · cie Adrien M** — identifiant `net.cieadrienm.simpletext`, licence MIT. Les choix sont dans `DECISIONS.md`, les notes pour les agents dans `CLAUDE.md`.
+**Adrien Mondot · cie Adrien M** — identifiant `net.cieadrienm.simpletext`, licence GPL 3.0 ou ultérieure. Les choix sont dans `DECISIONS.md`, les notes pour les agents dans `CLAUDE.md`.
+
+## Licence
+
+Copyright © 2026 Adrien Mondot, cie Adrien M.
+
+SimpleText est un logiciel libre, distribué sous la licence publique générale GNU (GPL) version 3 ou, au choix, toute version ultérieure. Il peut être utilisé, étudié, modifié et redistribué selon ses termes, sans aucune garantie. Texte complet : [`LICENSE`](LICENSE).

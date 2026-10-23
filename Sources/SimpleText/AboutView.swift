@@ -102,7 +102,7 @@ struct AboutView: View {
                     Text("Adrien Mondot · cie Adrien M")
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(Theme.textDim.swiftUI)
-                    Text("Licence MIT · \(AppVersion.bundleIdentifier)")
+                    Text("Licence GPL v3+ · \(AppVersion.bundleIdentifier)")
                         .font(.system(size: 10).monospacedDigit())
                         .foregroundStyle(Theme.textFaint.swiftUI)
                 }
