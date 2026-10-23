@@ -15,13 +15,15 @@ struct FileHandlingTests {
         #expect(panel.allowedContentTypes.isEmpty)
         #expect(panel.canChooseFiles)
         #expect(!panel.showsHiddenFiles)
-        let checkbox = controller.hiddenFilesCheckbox
-        #expect(checkbox != nil)
-        checkbox?.state = .on
-        if let checkbox { controller.toggleHiddenFiles(checkbox) }
+        let accessory = panel.accessoryView as? HiddenFilesAccessory
+        #expect(accessory != nil)
+        #expect(accessory?.checkbox.state == .off)
+        accessory?.checkbox.state = .on
+        if let accessory { accessory.toggle(accessory.checkbox) }
         #expect(panel.showsHiddenFiles)
         #expect(Preferences.showHiddenFiles)
         Preferences.showHiddenFiles = false
+        panel.accessoryView = nil
     }
 
     @Test("Any text file has the text type; a binary one is refused before a document exists")

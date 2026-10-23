@@ -16,8 +16,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         documentController = DocumentController()
         NSApp.mainMenu = MainMenu.build(delegate: self)
         NSWindow.allowsAutomaticWindowTabbing = true
-        // Run from the repository there is no bundle icon; the Dock shows the drawn one anyway.
-        if Bundle.main.object(forInfoDictionaryKey: "CFBundleIconFile") == nil { NSApp.applicationIconImage = AppVersion.icon }
 
         let args = Array(CommandLine.arguments.dropFirst())
         if let index = args.firstIndex(of: "--snapshot") {
@@ -28,6 +26,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Run from the repository there is no bundle icon; the Dock shows the drawn one anyway.
+        // Only once launched: set earlier, the Dock tile request hangs an unbundled process.
+        if Bundle.main.object(forInfoDictionaryKey: "CFBundleIconFile") == nil { NSApp.applicationIconImage = AppVersion.icon }
         if let snapshotRequest {
             Snapshot.run(output: snapshotRequest.output, input: snapshotRequest.input)
             return

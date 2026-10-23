@@ -5,8 +5,6 @@ import SimpleTextCore
 final class DocumentController: NSDocumentController {
     static let textType = "public.plain-text"
 
-    private weak var currentPanel: NSOpenPanel?
-
     override var defaultType: String? { Self.textType }
 
     override func documentClass(forType typeName: String) -> AnyClass? {
@@ -43,24 +41,38 @@ final class DocumentController: NSDocumentController {
         panel.showsHiddenFiles = Preferences.showHiddenFiles
         panel.message = "Tout fichier texte peut être ouvert, quelle que soit son extension."
 
-        let checkbox = NSButton(checkboxWithTitle: "Afficher les fichiers masqués", target: self, action: #selector(toggleHiddenFiles(_:)))
+        panel.accessoryView = HiddenFilesAccessory(panel: panel)
+        panel.isAccessoryViewDisclosed = true
+    }
+}
+
+/// The checkbox under the open panel. It knows its panel without retaining it: the panel owns this view,
+/// and a strong or weak Swift reference to a panel crashes once AppKit disposes of it.
+final class HiddenFilesAccessory: NSView {
+    unowned(unsafe) private let panel: NSSavePanel
+    let checkbox: NSButton
+
+    init(panel: NSSavePanel) {
+        self.panel = panel
+        checkbox = NSButton(checkboxWithTitle: "Afficher les fichiers masqués", target: nil, action: nil)
         checkbox.state = Preferences.showHiddenFiles ? .on : .off
         checkbox.sizeToFit()
-        let accessory = NSView(frame: NSRect(x: 0, y: 0, width: checkbox.frame.width + 40, height: 36))
+        super.init(frame: NSRect(x: 0, y: 0, width: checkbox.frame.width + 40, height: 36))
+        checkbox.target = self
+        checkbox.action = #selector(toggle(_:))
         checkbox.frame.origin = NSPoint(x: 20, y: (36 - checkbox.frame.height) / 2)
-        accessory.addSubview(checkbox)
-        panel.accessoryView = accessory
-        panel.isAccessoryViewDisclosed = true
-        currentPanel = panel
+        addSubview(checkbox)
     }
 
-    var hiddenFilesCheckbox: NSButton? {
-        currentPanel?.accessoryView?.subviews.compactMap { $0 as? NSButton }.first
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) is not supported")
     }
 
-    @objc func toggleHiddenFiles(_ sender: NSButton) {
+    /// Shows or hides the dot files at once, and remembers the choice.
+    @objc func toggle(_ sender: NSButton) {
         let shown = sender.state == .on
         Preferences.showHiddenFiles = shown
-        currentPanel?.showsHiddenFiles = shown
+        panel.showsHiddenFiles = shown
     }
 }

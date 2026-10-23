@@ -155,6 +155,25 @@ struct HighlighterTests {
         #expect(controller.highlighter.line(containing: 20) == 2)
     }
 
+    @Test("A document without a lexer is left plain and flush returns at once")
+    func plainText() {
+        let document = TextDocument()
+        document.replaceText(with: "just words\nno language")
+        let controller = EditorViewController(document: document)
+        controller.loadView()
+        #expect(controller.highlighter.lexer == nil)
+        controller.highlighter.flush()
+        #expect(color(at: 0, in: document) == Theme.text)
+        document.languageOverride = Language.named("Swift")
+        controller.refreshDocumentState()
+        controller.highlighter.flush()
+        #expect(color(at: 0, in: document) == Theme.text)
+        document.languageOverride = nil
+        controller.refreshDocumentState()
+        controller.highlighter.flush()
+        #expect(controller.highlighter.lexer == nil)
+    }
+
     @Test("Highlighting a 1 MB file stays under a second")
     func largeFile() {
         let unit = "import AVFoundation\n/// Plays a clip\nfinal class Player { var gain: Float = 0.5 /* x */ }\nlet s = \"text \\(a)\"\n"

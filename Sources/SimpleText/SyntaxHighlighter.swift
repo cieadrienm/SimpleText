@@ -115,7 +115,11 @@ final class SyntaxHighlighter {
         dirtyLast = lineStarts.count - 1
         if isEnabled {
             relexDirtyLines()
-        } else if storage.length > 0 {
+            return
+        }
+        dirtyFirst = nil
+        dirtyLast = 0
+        if storage.length > 0 {
             storage.beginEditing()
             storage.removeAttribute(.foregroundColor, range: NSRange(location: 0, length: storage.length))
             storage.addAttribute(.foregroundColor, value: Theme.text, range: NSRange(location: 0, length: storage.length))
@@ -129,7 +133,12 @@ final class SyntaxHighlighter {
     /// Lexes from the first dirty line and stops after the last one as soon as a line ends in the
     /// state it ended in before; later lines then cannot change.
     private func relexDirtyLines() {
-        guard let first = dirtyFirst, let lexer, isEnabled else { return }
+        guard let first = dirtyFirst else { return }
+        guard let lexer, isEnabled else {
+            dirtyFirst = nil
+            dirtyLast = 0
+            return
+        }
         let last = min(dirtyLast, lineStarts.count - 1)
         dirtyFirst = nil
         dirtyLast = 0

@@ -30,6 +30,10 @@ swift Scripts/make-icon.swift                 # redessine Resources/icon.icns
 - **`cacheDisplay` ne voit pas le texte de TextKit 2** : `--snapshot` passe par `CGWindowListCreateImage` (D16).
 - **Le groupe d'annulation se ferme avec le tour de boucle** : dans un test, `RunLoop.main.run(until:)` avant de lire `isDocumentEdited`.
 - **Les réglages ont un défaut en code** (`Preferences.value`) : sans `registerDefaults` les tests liraient 0 et `false`.
+- **Ne jamais retenir un `NSOpenPanel`**, ni faible (plantage `swift_unknownObjectWeakAssign`) ni fort (pointeur pendant) : ce qui doit lui parler vit dans sa vue accessoire, avec `unowned(unsafe)`. Et `DocumentController()` renvoie toujours le singleton d'`NSDocumentController`.
+- **`DispatchQueue.main.async` ne tourne pas sous `RunLoop.main.run` dans les tests** : ce qui doit s'exécuter « au prochain tour » passe par `RunLoop.main.perform`.
+- **Les chronos se font en release** (`swift test -c release`) : le build debug est dix à vingt fois plus lent sur les boucles du lexer.
+- **Un `kill` sur `$!` après un sous-shell `( … ) &` tue le sous-shell, pas l'app** : lancer la commande directement, et vérifier avec `pgrep -f .build/debug/SimpleText` qu'aucune instance ne traîne.
 - **Ne jamais tuer les apps d'Adrien** (eMotion, OSCScore, SimpleAudio tournent souvent). Lancer ses propres instances et les tuer par PID.
 - `timeout` n'existe pas sur macOS : surveiller un lancement avec une boucle `kill -0`.
 

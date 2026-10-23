@@ -43,3 +43,7 @@ Journal des choix structurants. Chaque entrée : le choix, pourquoi, et ce qu'on
 ## Constaté
 
 - MarkText 0.24 (Electron), la référence écartée : 412 Mo empaqueté, 6,8 Mo de JavaScript dans le renderer.
+- SimpleText 0.9.0, 23 octobre 2026 : `build/SimpleText.app` **3,0 Mo** (binaire universel arm64 + x86_64 de 2,5 Mo), signé Apple Development ; du lancement du binaire empaqueté à la capture d'un fichier Swift ouvert, **0,67 s** (`--snapshot`, délai 50 ms). En release, 1 Mo de Swift (36 000 lignes) se lexe en 44 ms et se colore en 226 ms ; un journal de 3,2 Mo (40 000 lignes) s'ouvre et se parcourt sans attente.
+- 35 tests (`swift test`, ~2 s) : fichiers texte et encodages, index de lignes, indentation, langages, lexers (Swift, Objective-C, C, C#, HTML, PHP, Markdown, et les courants), document, éditeur, coloration incrémentale, panneau d'ouverture, menu récents, réinterprétation d'encodage.
+- Un `NSOpenPanel` ne se retient pas depuis Swift : référence faible (plantage `swift_unknownObjectWeakAssign`) comme référence forte (pointeur pendant à l'affectation suivante, toutes les instances de `DocumentController` étant le singleton d'`NSDocumentController`). La case « fichiers masqués » vit donc dans une vue accessoire que le panneau possède, avec un `unowned(unsafe)` vers lui.
+- `flush()` du surligneur bouclait sans fin sur un document sans lexer : la plage sale est vidée quand il n'y a rien à colorer (test).

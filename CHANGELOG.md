@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.9.0 — en cours (2026-10-23)
+## 0.9.0 — 2026-10-23
 
 Première version de SimpleText, native (Swift, AppKit, TextKit 2), sans aucune dépendance.
 
@@ -9,4 +9,5 @@ Première version de SimpleText, native (Swift, AppKit, TextKit 2), sans aucune 
 - Panneau d'ouverture avec case « Afficher les fichiers masqués ».
 - Éditeur de code : numéros de ligne, ligne courante, indentation automatique, lignes dupliquées, supprimées ou déplacées, commentaires en une touche, recherche et remplacement, aller à la ligne.
 - Palette sombre de la famille Simple ; barre d'état ; À propos, réglages, raccourcis (⌘/), aide (⌘?).
-- `--snapshot` pour vérifier sans écran.
+- Coloration incrémentale par tranches, 1 Mo de Swift en 226 ms ; au-delà de 4 Mo le texte reste brut.
+- Application universelle de 3,0 Mo, signée ; `--snapshot` pour vérifier sans écran.

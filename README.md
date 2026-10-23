@@ -37,6 +37,22 @@ Scripts/bundle.sh                    # build/SimpleText.app, universelle, signé
 INSTALL=1 Scripts/bundle.sh          # et la copie dans /Applications
 ```
 
+## Taille et vitesse
+
+| | SimpleText 0.9.0 | MarkText 0.24 (Electron, écarté) |
+| --- | --- | --- |
+| Application macOS | **3,0 Mo** (universelle, arm64 + x86_64) | 412 Mo |
+| Du lancement à la fenêtre avec un fichier Swift ouvert | 0,67 s (mesuré par `--snapshot`) | plusieurs secondes |
+| Coloration d'1 Mo de Swift (36 000 lignes) | 226 ms, par tranches, sans bloquer | — |
+| Dépendances | aucune | 48 paquets npm |
+
+## Vérifier sans écran
+
+```bash
+.build/debug/SimpleText --snapshot /tmp/s.png Player.swift                 # la fenêtre d'édition
+SIMPLETEXT_SNAPSHOT_WINDOW=about .build/debug/SimpleText --snapshot /tmp/a.png   # about, shortcuts, settings ou help
+```
+
 ## Crédits
 
 **Adrien Mondot · cie Adrien M** — identifiant `net.cieadrienm.simpletext`, licence MIT. Les choix sont dans `DECISIONS.md`, les notes pour les agents dans `CLAUDE.md`.
