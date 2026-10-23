@@ -54,6 +54,21 @@ enum Snapshot {
             default: break
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                // SIMPLETEXT_SNAPSHOT_MENU=Fichier opens that menu for an instant (the app takes the
+                // focus for it) and lists its items instead: menus cannot be photographed.
+                if let title = environment["SIMPLETEXT_SNAPSHOT_MENU"] {
+                    let menu = NSApp.mainMenu?.items.first { $0.title == title }?.submenu
+                    if let menu, let view = NSApp.windows.first?.contentView {
+                        NSApp.activate(ignoringOtherApps: true)
+                        let close = Timer(timeInterval: 0.4, repeats: false) { _ in menu.cancelTrackingWithoutAnimation() }
+                        RunLoop.main.add(close, forMode: .common)
+                        menu.popUp(positioning: nil, at: .zero, in: view)
+                    }
+                    for item in menu?.items ?? [] {
+                        print(item.isSeparatorItem ? "—" : item.title + (item.submenu.map { " ▸ \($0.items.count)" } ?? ""))
+                    }
+                    exit(0)
+                }
                 guard let window = auxiliary ?? document?.windowControllers.first?.window ?? NSApp.windows.first,
                       let view = window.contentView else {
                     fputs("snapshot error: no window\n", stderr)

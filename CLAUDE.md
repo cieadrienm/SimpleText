@@ -18,6 +18,8 @@ SimpleText est un éditeur de texte et de code natif pour macOS (Swift, AppKit, 
 swift build                                   # .build/debug/SimpleText
 swift test                                    # SimpleTextCoreTests + SimpleTextAppTests
 .build/debug/SimpleText --snapshot /tmp/s.png [fichier]   # photographie la fenêtre sans écran
+SIMPLETEXT_SNAPSHOT_WINDOW=about|shortcuts|settings|help|open … --snapshot …   # une fenêtre annexe
+SIMPLETEXT_SNAPSHOT_MENU=Fichier … --snapshot /dev/null [fichier]  # liste un menu (prend le focus 0,4 s)
 Scripts/bundle.sh                             # build/SimpleText.app signée (universelle)
 INSTALL=1 Scripts/bundle.sh                   # et la copie dans /Applications
 swift Scripts/make-icon.swift                 # redessine Resources/icon.icns
@@ -26,6 +28,7 @@ swift Scripts/make-icon.swift                 # redessine Resources/icon.icns
 
 ## Règles qui ont coûté cher
 - **Ne jamais lire `textView.layoutManager`** : l'accès rétrograde la vue en TextKit 1 sans un mot (D4). `textLayoutManager` est la seule porte.
+- **Pas de sous-menu « Ouvrir l'élément récent » à la main** : AppKit l'insère lui-même dans l'app empaquetée (D14) ; le debug, sans `Info.plist`, ne le montre pas, et les menus se vérifient avec `SIMPLETEXT_SNAPSHOT_MENU`.
 - **Pas d'`NSRulerView`** : avec une règle verticale la vue texte n'est plus dessinée du tout sur macOS 15 (D5). La gouttière est `LineNumberGutter`, une vue sœur.
 - **`cacheDisplay` ne voit pas le texte de TextKit 2** : `--snapshot` passe par `CGWindowListCreateImage` (D16).
 - **Le groupe d'annulation se ferme avec le tour de boucle** : dans un test, `RunLoop.main.run(until:)` avant de lire `isDocumentEdited`.
@@ -39,7 +42,7 @@ swift Scripts/make-icon.swift                 # redessine Resources/icon.icns
 
 ## Architecture en une minute
 - `Sources/SimpleTextCore/` — pur Swift, testable sans AppKit : `TextFile` (binaire, encodages, fins de ligne), `LineIndex` + `TextStatistics` + `IndentStyle`, `Language` (registre et extensions ; `.h` = Objective-C), les lexers.
-- `Sources/SimpleText/` — AppKit : `App` (entrée), `AppDelegate` (lancement, Ouvrir récent, fenêtres annexes), `MainMenu` (menu français), `DocumentController` (tout fichier texte, fichiers masqués), `TextDocument`, `EditorWindowController` (onglets), `EditorViewController` (vue texte, gouttière, barre d'état, actions Présentation), `EditorTextView` (fonctions intelligentes coupées, indentation, lignes, commentaires, glisser-déposer), `LineNumberGutter`, `StatusBar` + `EditorModel` (SwiftUI), `Windows` + `AboutView` (À propos, raccourcis, réglages, aide), `Preferences`, `Theme`, `Snapshot`.
+- `Sources/SimpleText/` — AppKit : `App` (entrée), `AppDelegate` (lancement, fenêtres annexes), `MainMenu` (menu français), `DocumentController` (tout fichier texte, fichiers masqués), `TextDocument`, `EditorWindowController` (onglets), `EditorViewController` (vue texte, gouttière, barre d'état, actions Présentation), `EditorTextView` (fonctions intelligentes coupées, indentation, lignes, commentaires, glisser-déposer), `LineNumberGutter`, `StatusBar` + `EditorModel` (SwiftUI), `Windows` + `AboutView` (À propos, raccourcis, réglages, aide), `Preferences`, `Theme`, `Snapshot`.
 - `Resources/` — `Info.plist` (gabarit `@VERSION@`), `icon.icns`, `Help/index.html`, `fr.lproj`.
 - `Scripts/` — `bundle.sh`, `make-icon.swift`.
 

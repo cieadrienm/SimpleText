@@ -2,10 +2,8 @@ import AppKit
 import SimpleTextCore
 
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate {
     var documentController: DocumentController!
-    /// Where the recent files come from; the tests hand in their own list.
-    lazy var recentDocumentURLs: () -> [URL] = { [unowned self] in documentController.recentDocumentURLs }
     private var snapshotRequest: (output: String, input: String?)?
 
     func applicationWillFinishLaunching(_ notification: Notification) {
@@ -75,42 +73,5 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc func showShortcuts(_ sender: Any?) {
         ShortcutsWindowController.shared.show()
-    }
-
-    @objc func openRecentDocument(_ sender: NSMenuItem) {
-        guard let url = sender.representedObject as? URL else { return }
-        documentController.openDocument(withContentsOf: url, display: true) { _, _, error in
-            if let error { NSApp.presentError(error) }
-        }
-    }
-
-    @objc func clearRecentDocuments(_ sender: Any?) {
-        documentController.clearRecentDocuments(sender)
-    }
-
-    /// Fichier ▸ Ouvrir l’élément récent, rebuilt from the document controller each time it opens.
-    func menuNeedsUpdate(_ menu: NSMenu) {
-        menu.removeAllItems()
-        let urls = recentDocumentURLs()
-        if urls.isEmpty {
-            let empty = NSMenuItem(title: "Aucun élément récent", action: nil, keyEquivalent: "")
-            empty.isEnabled = false
-            menu.addItem(empty)
-            return
-        }
-        for url in urls {
-            let item = NSMenuItem(title: url.lastPathComponent, action: #selector(openRecentDocument(_:)), keyEquivalent: "")
-            item.target = self
-            item.representedObject = url
-            item.toolTip = url.path
-            let icon = NSWorkspace.shared.icon(forFile: url.path)
-            icon.size = NSSize(width: 16, height: 16)
-            item.image = icon
-            menu.addItem(item)
-        }
-        menu.addItem(.separator())
-        let clear = NSMenuItem(title: "Effacer le menu", action: #selector(clearRecentDocuments(_:)), keyEquivalent: "")
-        clear.target = self
-        menu.addItem(clear)
     }
 }

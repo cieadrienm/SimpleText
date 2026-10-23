@@ -7,7 +7,7 @@ enum MainMenu {
     static func build(delegate: AppDelegate) -> NSMenu {
         let menu = NSMenu()
         menu.addItem(applicationMenu(delegate))
-        menu.addItem(fileMenu(delegate))
+        menu.addItem(fileMenu())
         menu.addItem(editMenu())
         menu.addItem(viewMenu())
         menu.addItem(windowMenu())
@@ -33,13 +33,12 @@ enum MainMenu {
         return menu.asItem()
     }
 
-    private static func fileMenu(_ delegate: AppDelegate) -> NSMenuItem {
+    /// AppKit inserts « Ouvrir l’élément récent » after « Ouvrir… » itself (and « Partager » at the
+    /// end) once the bundle declares document types; a hand-built one would come out twice (D14).
+    private static func fileMenu() -> NSMenuItem {
         let menu = NSMenu(title: "Fichier")
         menu.add("Nouveau", #selector(NSDocumentController.newDocument(_:)), key: "n")
         menu.add("Ouvrir…", #selector(NSDocumentController.openDocument(_:)), key: "o")
-        let recent = NSMenu(title: "Ouvrir l’élément récent")
-        recent.delegate = delegate
-        menu.add("Ouvrir l’élément récent", nil).submenu = recent
         menu.addItem(.separator())
         menu.add("Fermer", #selector(NSWindow.performClose(_:)), key: "w")
         menu.add("Enregistrer", #selector(NSDocument.save(_:)), key: "s")
