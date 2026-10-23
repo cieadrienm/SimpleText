@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.10.0 — 2026-10-24
+## 0.10.0 — 2026-10-23
 
 - Markdown mis en forme pendant l'édition : titres plus grands, gras, italique, barré (`~~…~~`), liens soulignés, code en ligne sur une tuile, marqueurs estompés. Le balisage reste visible.
 - Fichier › Ouvrir l'élément récent n'apparaît plus en double : c'est le menu d'AppKit qui sert.
