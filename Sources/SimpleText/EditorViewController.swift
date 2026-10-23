@@ -118,6 +118,7 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, NSMenuIt
     }
 
     private var lastAppliedFont: NSFont?
+    private var lastWordWrap: Bool?
 
     func applyPreferences() {
         let font = Preferences.editorFont
@@ -132,7 +133,11 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, NSMenuIt
             textView.indentStyle = Preferences.indentStyle
             model.indentLabel = textView.indentStyle.label
         }
-        applyWordWrap(Preferences.wordWrap)
+        // Defaults change on every window move (frame autosave): only a real change re-tiles the text.
+        if lastWordWrap != Preferences.wordWrap {
+            lastWordWrap = Preferences.wordWrap
+            applyWordWrap(Preferences.wordWrap)
+        }
         gutter.invalidate()
         updateGutterWidth(gutter.thickness)
     }

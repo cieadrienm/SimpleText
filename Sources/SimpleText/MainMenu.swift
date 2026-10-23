@@ -99,9 +99,6 @@ enum MainMenu {
         menu.add("Surligner la ligne courante", #selector(EditorViewController.toggleCurrentLineHighlight(_:)))
         menu.addItem(.separator())
         menu.add("Agrandir le texte", #selector(EditorViewController.increaseFontSize(_:)), key: "+")
-        let plus = menu.add("Agrandir le texte", #selector(EditorViewController.increaseFontSize(_:)), key: "=")
-        plus.isAlternate = true
-        plus.isHidden = true
         menu.add("Réduire le texte", #selector(EditorViewController.decreaseFontSize(_:)), key: "-")
         menu.add("Taille normale", #selector(EditorViewController.resetFontSize(_:)), key: "0")
         menu.addItem(.separator())

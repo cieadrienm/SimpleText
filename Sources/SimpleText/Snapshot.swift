@@ -43,6 +43,14 @@ enum Snapshot {
             case "shortcuts": delegate?.showShortcuts(nil); auxiliary = ShortcutsWindowController.shared.window
             case "settings": delegate?.showSettings(nil); auxiliary = SettingsWindowController.shared.window
             case "help": delegate?.showHelp(nil); auxiliary = HelpWindowController.shared.window
+            case "open":
+                // The real ⌘O path; the panel is remote, so only the hook is reported.
+                controller.openDocument(nil)
+                DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                    print("open panel configured by beginOpenPanel: \(DocumentController.panelConfigured)")
+                    exit(DocumentController.panelConfigured ? 0 : 5)
+                }
+                return
             default: break
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + delay) {

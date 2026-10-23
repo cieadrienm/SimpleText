@@ -31,8 +31,13 @@ final class DocumentController: NSDocumentController {
         return super.runModalOpenPanel(openPanel, forTypes: nil)
     }
 
+    /// Set once AppKit has handed a panel to `configurePanel`; `--snapshot` with
+    /// SIMPLETEXT_SNAPSHOT_WINDOW=open reports it, since a remote panel cannot be photographed.
+    private(set) static var panelConfigured = false
+
     /// Any file, hidden ones on request; the checkbox in the panel changes it live and remembers it.
     func configurePanel(_ panel: NSOpenPanel) {
+        Self.panelConfigured = true
         panel.canChooseDirectories = false
         panel.canChooseFiles = true
         panel.allowsMultipleSelection = true
