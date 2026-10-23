@@ -96,6 +96,7 @@ enum MainMenu {
         menu.add("Retour à la ligne automatique", #selector(EditorViewController.toggleWordWrap(_:)), key: "w", modifiers: [.command, .option])
         menu.add("Numéros de ligne", #selector(EditorViewController.toggleLineNumbers(_:)), key: "l", modifiers: [.command, .shift])
         menu.add("Surligner la ligne courante", #selector(EditorViewController.toggleCurrentLineHighlight(_:)))
+        menu.add("Masquer les balises Markdown", #selector(EditorViewController.toggleMarkdownMarkup(_:)), key: "m", modifiers: [.command, .option])
         menu.addItem(.separator())
         menu.add("Agrandir le texte", #selector(EditorViewController.increaseFontSize(_:)), key: "+")
         menu.add("Réduire le texte", #selector(EditorViewController.decreaseFontSize(_:)), key: "-")

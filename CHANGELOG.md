@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.11.0 — 2026-10-23
+
+- Présentation › Masquer les balises Markdown (`⌥⌘M`, aussi dans les réglages) : `#`, `**`, `*`, `~~`, `` ` ``, `[ ]`, `(url)` et `>` disparaissent de toutes les lignes sauf celle du curseur, où ils reviennent estompés pour éditer. Le fichier ne change pas.
+- Un réglage booléen peut se passer en argument (`-hideMarkdownMarkup 1`), utile avec `--snapshot`.
+
 ## 0.10.0 — 2026-10-23
 
 - Markdown mis en forme pendant l'édition : titres plus grands, gras, italique, barré (`~~…~~`), liens soulignés, code en ligne sur une tuile, marqueurs estompés. Le balisage reste visible.

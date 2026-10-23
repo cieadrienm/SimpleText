@@ -20,6 +20,7 @@ swift test                                    # SimpleTextCoreTests + SimpleText
 .build/debug/SimpleText --snapshot /tmp/s.png [fichier]   # photographie la fenêtre sans écran
 SIMPLETEXT_SNAPSHOT_WINDOW=about|shortcuts|settings|help|open … --snapshot …   # une fenêtre annexe
 SIMPLETEXT_SNAPSHOT_MENU=Fichier … --snapshot /dev/null [fichier]  # liste un menu (prend le focus 0,4 s)
+.build/debug/SimpleText -hideMarkdownMarkup 1 --snapshot …  # un réglage en argument, sans toucher aux défauts
 Scripts/bundle.sh                             # build/SimpleText.app signée (universelle)
 INSTALL=1 Scripts/bundle.sh                   # et la copie dans /Applications
 swift Scripts/make-icon.swift                 # redessine Resources/icon.icns

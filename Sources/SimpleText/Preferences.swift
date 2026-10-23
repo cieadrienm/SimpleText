@@ -18,6 +18,7 @@ enum Preferences {
         static let defaultEncoding = "defaultEncoding"
         static let defaultLineEnding = "defaultLineEnding"
         static let showHiddenFiles = "showHiddenFiles"
+        static let hideMarkdownMarkup = "hideMarkdownMarkup"
     }
 
     static let defaults: [String: Any] = [
@@ -32,6 +33,7 @@ enum Preferences {
         Key.defaultEncoding: Int(String.Encoding.utf8.rawValue),
         Key.defaultLineEnding: LineEnding.lf.rawValue,
         Key.showHiddenFiles: false,
+        Key.hideMarkdownMarkup: false,
     ]
 
     static func register() {
@@ -41,8 +43,10 @@ enum Preferences {
     private static var store: UserDefaults { .standard }
 
     /// The stored value, or the default when nothing was stored or registered yet (tests, first launch).
+    /// Booleans go through `bool(forKey:)`: a `-key 1` on the command line arrives as a string.
     private static func value<T>(_ key: String) -> T {
-        (store.object(forKey: key) as? T) ?? (defaults[key] as! T)
+        if T.self == Bool.self, store.object(forKey: key) != nil { return store.bool(forKey: key) as! T }
+        return (store.object(forKey: key) as? T) ?? (defaults[key] as! T)
     }
 
     static var fontSize: CGFloat { CGFloat(value(Key.fontSize) as Double) }
@@ -53,6 +57,7 @@ enum Preferences {
     static var showLineNumbers: Bool { value(Key.showLineNumbers) }
     static var highlightCurrentLine: Bool { value(Key.highlightCurrentLine) }
     static var autoIndent: Bool { value(Key.autoIndent) }
+    static var hideMarkdownMarkup: Bool { value(Key.hideMarkdownMarkup) }
     static var defaultEncoding: String.Encoding {
         let raw: Int = value(Key.defaultEncoding)
         return raw > 0 ? String.Encoding(rawValue: UInt(raw)) : .utf8

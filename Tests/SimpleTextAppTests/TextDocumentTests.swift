@@ -199,6 +199,40 @@ struct HighlighterTests {
         #expect(color(at: 10, in: document) == Theme.text)
     }
 
+    @Test("Hidden markup: markers vanish on every line but the caret's, and come back when turned off")
+    func hiddenMarkup() {
+        let document = TextDocument()
+        document.languageOverride = Language.named("Markdown")
+        document.replaceText(with: Self.markdown)
+        let controller = EditorViewController(document: document)
+        controller.loadView()
+        let storage = document.textStorage
+        func hidden(_ offset: Int) -> Bool {
+            font(at: offset, in: document)?.pointSize == 0.1 && color(at: offset, in: document) == .clear
+        }
+        UserDefaults.standard.set(true, forKey: Preferences.Key.hideMarkdownMarkup)
+        defer { UserDefaults.standard.removeObject(forKey: Preferences.Key.hideMarkdownMarkup) }
+        controller.applyPreferences()
+        controller.highlighter.flush()
+        // The caret sits on line 1: its # stays, faded; line 2's markers are gone.
+        #expect(color(at: 0, in: document) == Theme.textFaint)
+        #expect(hidden(8) && hidden(15))                            // ** **
+        #expect(hidden(17) && hidden(24) && hidden(30) && hidden(34)) // * ~~ ` [
+        #expect(hidden(37) && hidden(39))                           // (u)
+        #expect(!hidden(10) && !hidden(35))                         // gras, l
+        #expect(storage.string == Self.markdown)
+        // Moving the caret to line 2 swaps which line shows its markers.
+        controller.textView.setSelectedRange(NSRange(location: 10, length: 0))
+        #expect(hidden(0))
+        #expect(color(at: 8, in: document) == Theme.textFaint)
+        #expect(font(at: 8, in: document)?.pointSize == Preferences.editorFont.pointSize)
+        UserDefaults.standard.set(false, forKey: Preferences.Key.hideMarkdownMarkup)
+        controller.applyPreferences()
+        controller.highlighter.flush()
+        #expect(color(at: 0, in: document) == Theme.textFaint && !hidden(0))
+        #expect(color(at: 37, in: document) == Theme.purple)
+    }
+
     @Test("Other languages keep one font; leaving Markdown or changing the font keeps the styles right")
     func fontsFollowLexerAndPreferences() {
         let document = TextDocument()

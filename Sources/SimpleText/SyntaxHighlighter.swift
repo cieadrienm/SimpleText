@@ -35,6 +35,26 @@ final class SyntaxHighlighter {
     private var fonts: MarkupFonts
     private var usesFonts: Bool { lexer?.usesFonts == true }
 
+    /// Markdown markers vanish on every line but the caret's, where they come back faded to be edited.
+    var hidesMarkup = false {
+        didSet { if hidesMarkup != oldValue, usesFonts { highlightAll() } }
+    }
+    var caretLine = 0 {
+        didSet {
+            guard hidesMarkup, usesFonts, caretLine != oldValue else { return }
+            restyle(oldValue)
+            restyle(caretLine)
+        }
+    }
+
+    /// Lexes one line again now, merged with whatever edit is still pending.
+    private func restyle(_ line: Int) {
+        guard line < lineStarts.count else { return }
+        dirtyFirst = min(dirtyFirst ?? line, line)
+        dirtyLast = max(dirtyLast, line)
+        relexDirtyLines()
+    }
+
     /// Lexing stops above this size; the text stays in the base colour.
     var limit = TextDocument.highlightLimit
 
@@ -177,7 +197,7 @@ final class SyntaxHighlighter {
             if count > 0 { text.getCharacters(&buffer, range: NSRange(location: start, length: count)) }
             let line = buffer[0..<count]
             let tokens = lexer.tokenize(line, state: &state)
-            apply(tokens, line: line, lineStart: start)
+            apply(tokens, line: line, lineStart: start, hidingMarkers: hidesMarkup && i != caretLine)
             let previous = endStates[i]
             endStates[i] = state
             i += 1
@@ -197,7 +217,7 @@ final class SyntaxHighlighter {
         while dirtyFirst != nil { relexDirtyLines() }
     }
 
-    private func apply(_ tokens: [Token], line: Line, lineStart: Int) {
+    private func apply(_ tokens: [Token], line: Line, lineStart: Int, hidingMarkers: Bool) {
         let lineLength = line.count
         guard lineLength > 0 else { return }
         let lineRange = NSRange(location: lineStart, length: lineLength)
@@ -206,7 +226,7 @@ final class SyntaxHighlighter {
         for token in tokens where token.kind != .plain {
             let range = NSRange(location: lineStart + token.range.lowerBound, length: token.range.count)
             storage.addAttribute(.foregroundColor, value: Theme.color(for: token.kind), range: range)
-            if usesFonts { style(token, line: line, range: range) }
+            if usesFonts { style(token, line: line, range: range, hidingMarkers: hidingMarkers) }
         }
     }
 
@@ -220,12 +240,21 @@ final class SyntaxHighlighter {
     }
 
     /// Markdown shown formatted, markup kept: bigger bold headings, bold, italic, struck, underlined
-    /// links, inline code on a tile, and the markers themselves faded so the words stand out.
-    private func style(_ token: Token, line: Line, range: NSRange) {
+    /// links, inline code on a tile, and the markers themselves faded so the words stand out, or
+    /// hidden: a 0.1 pt clear font takes no room, and the text itself is untouched.
+    private func style(_ token: Token, line: Line, range: NSRange, hidingMarkers: Bool) {
+        func mark(_ range: NSRange) {
+            guard range.length > 0 else { return }
+            if hidingMarkers {
+                storage.addAttributes([.font: fonts.hidden, .foregroundColor: NSColor.clear], range: range)
+            } else {
+                storage.addAttribute(.foregroundColor, value: Theme.textFaint, range: range)
+            }
+        }
         func fade(_ leading: Int, _ trailing: Int = 0) {
             let leading = min(leading, range.length), trailing = min(trailing, range.length - leading)
-            if leading > 0 { storage.addAttribute(.foregroundColor, value: Theme.textFaint, range: NSRange(location: range.location, length: leading)) }
-            if trailing > 0 { storage.addAttribute(.foregroundColor, value: Theme.textFaint, range: NSRange(location: NSMaxRange(range) - trailing, length: trailing)) }
+            mark(NSRange(location: range.location, length: leading))
+            mark(NSRange(location: NSMaxRange(range) - trailing, length: trailing))
         }
         func italic(_ range: NSRange) {
             storage.addAttribute(.font, value: fonts.italic, range: range)
@@ -239,7 +268,8 @@ final class SyntaxHighlighter {
             while i < line.endIndex, line[i] == 35 { i += 1 }
             let level = min(max(i - hashes, 1), fonts.headings.count)
             storage.addAttribute(.font, value: fonts.headings[level - 1], range: range)
-            storage.addAttribute(.foregroundColor, value: Theme.textFaint, range: NSRange(location: range.location + hashes - line.startIndex, length: i - hashes))
+            let spaceAfter = hidingMarkers && i < line.endIndex && line[i] == 32 ? 1 : 0
+            mark(NSRange(location: range.location + hashes - line.startIndex, length: i - hashes + spaceAfter))
         case .strong:
             storage.addAttribute(.font, value: fonts.bold, range: range)
             fade(2, 2)
@@ -256,8 +286,15 @@ final class SyntaxHighlighter {
             fade(ticks, ticks)
         case .link:
             storage.addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue, range: range)
+            fade(line[token.range.lowerBound] == 33 ? 2 : 1, 1)
+        case .meta where hidingMarkers && line[token.range.lowerBound] == 40:
+            mark(range)   // the (url) after a link
         case .quote:
             italic(range)
+            var i = line.startIndex
+            while i < line.endIndex, line[i] == 32 || line[i] == 9 { i += 1 }
+            let spaceAfter = hidingMarkers && i + 1 < line.endIndex && line[i + 1] == 32 ? 1 : 0
+            mark(NSRange(location: range.location + i - line.startIndex, length: 1 + spaceAfter))
         case .listMarker:
             storage.addAttribute(.font, value: fonts.bold, range: range)
         default:
@@ -271,6 +308,8 @@ struct MarkupFonts {
     let base: NSFont
     let bold: NSFont
     let italic: NSFont
+    /// What hidden markers wear: no width to speak of, drawn clear.
+    let hidden: NSFont
     /// Index = heading level − 1; the first three grow, the rest are only bold.
     let headings: [NSFont]
     /// The family has no italic face: the text view slants the regular one instead.
@@ -282,6 +321,7 @@ struct MarkupFonts {
         self.base = base
         bold = boldFont
         italic = italicFont
+        hidden = NSFont(descriptor: base.fontDescriptor, size: 0.1) ?? base
         italicIsSynthesised = !italicFont.fontDescriptor.symbolicTraits.contains(.italic)
         headings = [1.4, 1.25, 1.1, 1, 1, 1].map { NSFont(descriptor: boldFont.fontDescriptor, size: base.pointSize * $0) ?? boldFont }
     }

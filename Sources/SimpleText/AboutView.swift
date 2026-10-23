@@ -212,6 +212,7 @@ struct ShortcutsView: View {
             ("⌘L", "Aller à la ligne…"),
             ("⌥⌘W", "Retour à la ligne automatique"),
             ("⇧⌘L", "Numéros de ligne"),
+            ("⌥⌘M", "Masquer les balises Markdown"),
             ("⌘+ / ⌘- / ⌘0", "Taille du texte"),
             ("⌘? / ⌘/", "Aide / Cette liste"),
         ]),
@@ -278,6 +279,7 @@ struct SettingsView: View {
     @AppStorage(Preferences.Key.defaultEncoding) private var defaultEncoding = Int(String.Encoding.utf8.rawValue)
     @AppStorage(Preferences.Key.defaultLineEnding) private var defaultLineEnding = "LF"
     @AppStorage(Preferences.Key.showHiddenFiles) private var showHiddenFiles = false
+    @AppStorage(Preferences.Key.hideMarkdownMarkup) private var hideMarkdownMarkup = false
 
     private static let monospacedFamilies: [String] = {
         let names = NSFontManager.shared.availableFontFamilies.filter { family in
@@ -306,6 +308,7 @@ struct SettingsView: View {
                 Toggle("Retour à la ligne automatique", isOn: $wordWrap)
                 Toggle("Numéros de ligne", isOn: $showLineNumbers)
                 Toggle("Surligner la ligne courante", isOn: $highlightCurrentLine)
+                Toggle("Masquer les balises Markdown, sauf sur la ligne du curseur", isOn: $hideMarkdownMarkup)
             }
             section("Indentation") {
                 Toggle("Indenter la nouvelle ligne comme la précédente", isOn: $autoIndent)

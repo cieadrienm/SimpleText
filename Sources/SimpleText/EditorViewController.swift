@@ -130,6 +130,7 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, NSMenuIt
         }
         textView.highlightCurrentLine = Preferences.highlightCurrentLine
         textView.autoIndent = Preferences.autoIndent
+        highlighter.hidesMarkup = Preferences.hideMarkdownMarkup
         if textView.indentStyleFromPreferences {
             textView.indentStyle = Preferences.indentStyle
             model.indentLabel = textView.indentStyle.label
@@ -209,6 +210,7 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, NSMenuIt
         let (line, column) = index.position(of: range.location)
         model.line = line + 1
         model.column = column + 1
+        highlighter.caretLine = line
         model.selectedCharacters = range.length
         model.selectedLines = range.length > 0 ? index.line(containing: NSMaxRange(range) - 1) - line + 1 : 0
     }
@@ -290,6 +292,10 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, NSMenuIt
         Preferences.set(!Preferences.highlightCurrentLine, for: Preferences.Key.highlightCurrentLine)
     }
 
+    @objc func toggleMarkdownMarkup(_ sender: Any?) {
+        Preferences.set(!Preferences.hideMarkdownMarkup, for: Preferences.Key.hideMarkdownMarkup)
+    }
+
     @objc func increaseFontSize(_ sender: Any?) {
         Preferences.set(min(48, Preferences.fontSize + 1), for: Preferences.Key.fontSize)
     }
@@ -342,6 +348,8 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, NSMenuIt
             item.state = Preferences.showLineNumbers ? .on : .off
         case #selector(toggleCurrentLineHighlight(_:)):
             item.state = Preferences.highlightCurrentLine ? .on : .off
+        case #selector(toggleMarkdownMarkup(_:)):
+            item.state = Preferences.hideMarkdownMarkup ? .on : .off
         case #selector(setLanguage(_:)):
             item.state = (item.representedObject as? String) == document.language.name ? .on : .off
         case #selector(setEncoding(_:)):

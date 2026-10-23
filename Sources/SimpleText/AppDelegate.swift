@@ -49,6 +49,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             if skip > 0 { skip -= 1; continue }
             if name == "--snapshot" { skip = 2; continue }
             if name.hasPrefix("--") { continue }
+            if name.hasPrefix("-") { skip = 1; continue }   // `-key value`, read by UserDefaults
             let url = URL(fileURLWithPath: name)
             documentController.openDocument(withContentsOf: url, display: true) { _, _, error in
                 if let error { NSApp.presentError(error) }
