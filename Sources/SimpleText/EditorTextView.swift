@@ -15,10 +15,15 @@ final class EditorTextView: NSTextView {
         didSet { needsDisplay = true }
     }
 
+    /// Rich text for an RTF document: the file's fonts and colours, the font panel, no code helpers.
+    /// Set before `configureAsCodeEditor`, which would otherwise stamp the editor font over the text.
+    func useRichText(_ rich: Bool) {
+        isRichText = rich
+        usesFontPanel = rich
+    }
+
     func configureAsCodeEditor() {
-        isRichText = false
         importsGraphics = false
-        usesFontPanel = false
         usesRuler = false
         usesInspectorBar = false
         isAutomaticQuoteSubstitutionEnabled = false
@@ -39,7 +44,7 @@ final class EditorTextView: NSTextView {
         textContainerInset = NSSize(width: 8, height: 12)
         drawsBackground = true
         backgroundColor = Theme.background
-        textColor = Theme.text
+        if !isRichText { textColor = Theme.text }   // the setter recolours the whole text
         insertionPointColor = Theme.caret
         selectedTextAttributes = [.backgroundColor: Theme.selection]
         applyFont(Preferences.editorFont, tabWidth: Preferences.tabWidth)
@@ -58,6 +63,7 @@ final class EditorTextView: NSTextView {
     /// Markdown fonts back afterwards.
     func applyFont(_ font: NSFont, tabWidth: Int) {
         self.tabWidth = tabWidth
+        guard !isRichText else { return }
         self.font = font
         let style = NSMutableParagraphStyle()
         style.tabStops = []
@@ -122,6 +128,7 @@ final class EditorTextView: NSTextView {
     }
 
     override func insertTab(_ sender: Any?) {
+        guard !isRichText else { return super.insertTab(sender) }
         let selection = selectedRange()
         if selection.length > 0, text(in: selection).contains("\n") {
             indentSelection(sender)
@@ -138,7 +145,47 @@ final class EditorTextView: NSTextView {
     }
 
     override func insertBacktab(_ sender: Any?) {
+        guard !isRichText else { return super.insertBacktab(sender) }
         outdentSelection(sender)
+    }
+
+    // MARK: Format menu (rich text only)
+
+    /// In plain text NSTextView would apply the font or colour panel to the whole text.
+    override func changeFont(_ sender: Any?) {
+        if isRichText { super.changeFont(sender) }
+    }
+
+    override func changeColor(_ sender: Any?) {
+        if isRichText { super.changeColor(sender) }
+    }
+
+    override func changeAttributes(_ sender: Any?) {
+        if isRichText { super.changeAttributes(sender) }
+    }
+
+    /// The item's tag is the trait mask `addFontTrait:` reads: bold 2, italic 1.
+    @objc func toggleFontTrait(_ sender: Any?) {
+        NSFontManager.shared.addFontTrait(sender)
+    }
+
+    @objc func showFontPanel(_ sender: Any?) {
+        NSFontManager.shared.orderFrontFontPanel(sender)
+    }
+
+    @objc func showColorPanel(_ sender: Any?) {
+        NSApp.orderFrontColorPanel(sender)
+    }
+
+    private static let richTextActions: Set<Selector> = [
+        #selector(toggleFontTrait(_:)), #selector(showFontPanel(_:)), #selector(showColorPanel(_:)),
+        #selector(NSText.underline(_:)), #selector(NSText.alignLeft(_:)), #selector(NSText.alignCenter(_:)),
+        #selector(NSText.alignRight(_:)), #selector(NSTextView.alignJustified(_:)),
+    ]
+
+    override func validateUserInterfaceItem(_ item: any NSValidatedUserInterfaceItem) -> Bool {
+        if !isRichText, let action = item.action, Self.richTextActions.contains(action) { return false }
+        return super.validateUserInterfaceItem(item)
     }
 
     /// Applies `transform` to every selected line, keeping a caret on its line and a selection on its lines.

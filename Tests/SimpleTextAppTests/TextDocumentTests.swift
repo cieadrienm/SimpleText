@@ -303,3 +303,82 @@ struct HighlighterTests {
         #expect(color(at: text.utf16.count - 3, in: document) == Theme.green)
     }
 }
+
+@Suite("Rich text (RTF)")
+@MainActor
+struct RichTextTests {
+    /// "Noir gras rouge grand": Noir 0–3, gras 5–8 (bold), rouge 10–14 (red), grand 16–20 (18 pt).
+    static let rtf = #"""
+    {\rtf1\ansi\ansicpg1252\cocoartf2822
+    {\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fswiss\fcharset0 Helvetica-Bold;}
+    {\colortbl;\red255\green255\blue255;\red0\green0\blue0;\red255\green0\blue0;}
+    \pard\f0\fs24 \cf2 Noir \f1\b gras\f0\b0  \cf3 rouge\cf2  \fs36 grand}
+    """#
+
+    private func color(at offset: Int, in text: NSAttributedString) -> NSColor? {
+        (text.attribute(.foregroundColor, at: offset, effectiveRange: nil) as? NSColor)?.usingColorSpace(.sRGB)
+    }
+
+    private func font(at offset: Int, in text: NSAttributedString) -> NSFont? {
+        text.attribute(.font, at: offset, effectiveRange: nil) as? NSFont
+    }
+
+    @Test("An RTF file reads as rich text: black takes the theme colour, red and bold stay, and the file gets its black back")
+    func readAndWrite() throws {
+        let document = TextDocument()
+        try document.read(from: Data(Self.rtf.utf8), ofType: TextDocument.rtfType)
+        #expect(document.isRichText)
+        let storage = document.textStorage
+        #expect(storage.string.hasPrefix("Noir gras rouge grand"))
+        #expect(storage.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor == Theme.text)
+        #expect(color(at: 10, in: storage)?.redComponent == 1)
+        #expect(font(at: 5, in: storage)?.fontName == "Helvetica-Bold")
+        #expect(font(at: 16, in: storage)?.pointSize == 18)
+        let data = try document.data(ofType: TextDocument.rtfType)
+        let back = try #require(NSAttributedString(rtf: data, documentAttributes: nil))
+        #expect(back.string.hasPrefix("Noir gras rouge grand"))
+        let black = color(at: 0, in: back)
+        #expect(black == nil || (black!.redComponent == 0 && black!.greenComponent == 0 && black!.blueComponent == 0))
+        #expect(color(at: 10, in: back)?.redComponent == 1)
+        #expect(font(at: 5, in: back)?.fontName == "Helvetica-Bold")
+        #expect(font(at: 16, in: back)?.pointSize == 18)
+    }
+
+    @Test("The editor leaves a rich document's fonts and colours alone")
+    func editorKeepsFormatting() throws {
+        let document = TextDocument()
+        try document.read(from: Data(Self.rtf.utf8), ofType: TextDocument.rtfType)
+        let controller = EditorViewController(document: document)
+        controller.loadView()
+        controller.applyPreferences()
+        controller.highlighter.flush()
+        #expect(controller.textView.isRichText)
+        #expect(!controller.highlighter.isActive)
+        #expect(font(at: 5, in: document.textStorage)?.fontName == "Helvetica-Bold")
+        #expect(font(at: 0, in: document.textStorage)?.fontName == "Helvetica")
+        #expect(color(at: 10, in: document.textStorage)?.redComponent == 1)
+        #expect(!document.isDocumentEdited)
+    }
+
+    @Test("An untitled document converts to rich text and back; undo restores the formatting")
+    func convert() {
+        let document = TextDocument()
+        document.replaceText(with: "let a = 1")
+        let controller = EditorViewController(document: document)
+        controller.loadView()
+        document.convert(toRichText: true)
+        #expect(document.isRichText && document.fileType == TextDocument.rtfType)
+        #expect(document.fileNameExtension(forType: TextDocument.rtfType, saveOperation: .saveOperation) == "rtf")
+        #expect(controller.textView.isRichText && !controller.highlighter.isActive)
+        document.textStorage.addAttribute(.font, value: NSFont(name: "Helvetica-Bold", size: 12)!, range: NSRange(location: 0, length: 3))
+        // Each conversion is its own undo group once the run loop turns, as between two menu actions.
+        RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.05))
+        document.convert(toRichText: false)
+        #expect(!document.isRichText && !controller.textView.isRichText && controller.highlighter.isActive)
+        #expect(font(at: 0, in: document.textStorage)?.fontName != "Helvetica-Bold")
+        RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.05))
+        document.undoManager?.undo()
+        #expect(document.isRichText && controller.textView.isRichText)
+        #expect(font(at: 0, in: document.textStorage)?.fontName == "Helvetica-Bold")
+    }
+}

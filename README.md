@@ -6,6 +6,7 @@
 
 - **Coloration de syntaxe par langage** : C, Objective-C (y compris `.h`), C#, Swift, HTML, PHP, Markdown, JavaScript, TypeScript, JSON, CSS, Python, Shell, YAML, XML, SQL, Go, Rust, Java, Lua, Ruby, Makefile… choisie d'après l'extension, changeable dans la barre d'état ou le menu Présentation.
 - **Markdown mis en forme en écrivant** : titres plus grands, gras, italique, barré, liens soulignés, code sur une tuile, marqueurs estompés ; le texte reste du texte. `⌥⌘M` masque les balises, sauf sur la ligne du curseur où elles reviennent pour éditer.
+- **Texte enrichi (RTF)** : un `.rtf` s'ouvre avec ses polices et ses couleurs, s'édite (menu Format : gras, italique, souligné, alignement, polices, couleurs) et se réenregistre en RTF. Son texte noir s'affiche dans la couleur du thème et reste noir dans le fichier. Format › Convertir passe un document en texte enrichi ou brut.
 - **Tout fichier texte s'ouvre**, quelle que soit son extension ou sans extension ; les binaires sont refusés. Encodage (UTF-8, UTF-16, Latin 1, Windows 1252, Mac OS Roman…) et fins de ligne (LF, CRLF, CR) détectés et conservés à l'identique ; indentation lue dans le fichier.
 - **Édition de code** : numéros de ligne, ligne courante, retour à la ligne au choix, indentation automatique, `⇥`/`⇧⇥` sur une sélection, lignes dupliquées (`⌘D`), supprimées (`⇧⌘K`) ou déplacées (`⌥↑`/`⌥↓`), commentaires en une touche (`⌥⌘/`), recherche et remplacement (`⌘F`, `⌥⌘F`), aller à la ligne (`⌘L`).
 - **Documents à la Mac** : onglets, Ouvrir l'élément récent, Dupliquer, Renommer, Déplacer, versions, enregistrement automatique, fenêtres restaurées au lancement, glisser-déposer de fichiers sur la fenêtre ou le Dock.
@@ -27,6 +28,8 @@
 | `⌘L` | Aller à la ligne… |
 | `⌥⌘W` / `⇧⌘L` | Retour à la ligne / numéros de ligne |
 | `⌥⌘M` | Masquer les balises Markdown |
+| `⌘B` / `⌘I` / `⌘U` | Gras / italique / souligné (RTF) |
+| `⌘T` / `⇧⌘C` | Polices / couleurs (RTF) |
 | `⌘+` / `⌘-` / `⌘0` | Taille du texte |
 | `⌘/` / `⌘?` | Raccourcis / Aide |
 

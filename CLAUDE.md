@@ -43,13 +43,14 @@ swift Scripts/make-icon.swift                 # redessine Resources/icon.icns
 
 ## Architecture en une minute
 - `Sources/SimpleTextCore/` — pur Swift, testable sans AppKit : `TextFile` (binaire, encodages, fins de ligne), `LineIndex` + `TextStatistics` + `IndentStyle`, `Language` (registre et extensions ; `.h` = Objective-C), les lexers.
-- `Sources/SimpleText/` — AppKit : `App` (entrée), `AppDelegate` (lancement, fenêtres annexes), `MainMenu` (menu français), `DocumentController` (tout fichier texte, fichiers masqués), `TextDocument`, `EditorWindowController` (onglets), `EditorViewController` (vue texte, gouttière, barre d'état, actions Présentation), `EditorTextView` (fonctions intelligentes coupées, indentation, lignes, commentaires, glisser-déposer), `LineNumberGutter`, `StatusBar` + `EditorModel` (SwiftUI), `Windows` + `AboutView` (À propos, raccourcis, réglages, aide), `Preferences`, `Theme`, `Snapshot`.
+- `Sources/SimpleText/` — AppKit : `App` (entrée), `AppDelegate` (lancement, fenêtres annexes), `MainMenu` (menu français), `DocumentController` (tout fichier texte, RTF, fichiers masqués), `TextDocument` (texte, RTF, conversion), `EditorWindowController` (onglets), `EditorViewController` (vue texte, gouttière, barre d'état, actions Présentation), `EditorTextView` (fonctions intelligentes coupées, indentation, lignes, commentaires, glisser-déposer), `LineNumberGutter`, `StatusBar` + `EditorModel` (SwiftUI), `Windows` + `AboutView` (À propos, raccourcis, réglages, aide), `Preferences`, `Theme`, `Snapshot`.
 - `Resources/` — `Info.plist` (gabarit `@VERSION@`), `icon.icns`, `Help/index.html`, `fr.lproj`.
 - `Scripts/` — `bundle.sh`, `make-icon.swift`.
 
 ## Invariants
 - Un document est son `NSTextStorage` : lecture, édition, retour en arrière et enregistrement passent tous par lui.
-- Un fichier est réécrit avec l'encodage et les fins de ligne lus, sauf changement explicite dans la barre d'état.
+- Un fichier est réécrit avec l'encodage et les fins de ligne lus, sauf changement explicite dans la barre d'état. Un RTF est réécrit par AppKit, son noir rendu noir (D22).
+- En texte enrichi (RTF), ni le surligneur, ni `applyFont`, ni `textColor` n'écrivent dans le stockage : `useRichText` se pose avant `configureAsCodeEditor`, et `changeFont:` est ignoré en texte brut.
 - Le langage vient du nom du fichier ou du choix de l'utilisateur, jamais d'une analyse du contenu.
 - La coloration ne change que des couleurs, et des polices pour le seul lexer qui déclare `usesFonts` (Markdown, D20) ; jamais le texte ni l'historique d'annulation. Chaque ligne repart de la police nue avant ses jetons.
 - Tout nouveau comportement a un test ; un défaut corrigé a d'abord un test qui échoue.

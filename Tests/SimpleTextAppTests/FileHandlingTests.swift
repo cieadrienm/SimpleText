@@ -38,6 +38,15 @@ struct FileHandlingTests {
         let binary = folder.appendingPathComponent("image.png")
         try Data([0x89, 0x50, 0x4E, 0x47, 0x00, 0x01]).write(to: binary)
         #expect(throws: TextFileError.self) { try controller.typeForContents(of: binary) }
+        // RTF by extension, or by header whatever the extension.
+        let rtf = folder.appendingPathComponent("note.rtf")
+        try "{\\rtf1\\ansi Hello}".write(to: rtf, atomically: true, encoding: .utf8)
+        #expect(try controller.typeForContents(of: rtf) == TextDocument.rtfType)
+        let disguised = folder.appendingPathComponent("note.txt")
+        try "{\\rtf1\\ansi Hello}".write(to: disguised, atomically: true, encoding: .utf8)
+        #expect(try controller.typeForContents(of: disguised) == TextDocument.rtfType)
+        try "plain".write(to: disguised, atomically: true, encoding: .utf8)
+        #expect(try controller.typeForContents(of: disguised) == DocumentController.textType)
     }
 
     @Test("Changing the encoding of a clean document reads it again from disk")

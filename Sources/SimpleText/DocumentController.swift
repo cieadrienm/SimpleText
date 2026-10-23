@@ -12,12 +12,13 @@ final class DocumentController: NSDocumentController {
     }
 
     /// A file is text when its first bytes hold no NUL, extension or not; binary files are refused here,
-    /// before any document is made for them.
+    /// before any document is made for them. RTF is told by its extension or its `{\rtf` header.
     override func typeForContents(of url: URL) throws -> String {
         let handle = try FileHandle(forReadingFrom: url)
         defer { try? handle.close() }
         let head = try handle.read(upToCount: 8192) ?? Data()
         if TextFile.isBinary(head) { throw TextFileError.binary }
+        if url.pathExtension.lowercased() == "rtf" || head.starts(with: Array("{\\rtf".utf8)) { return TextDocument.rtfType }
         return Self.textType
     }
 

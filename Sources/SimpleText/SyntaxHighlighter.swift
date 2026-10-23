@@ -58,7 +58,12 @@ final class SyntaxHighlighter {
     /// Lexing stops above this size; the text stays in the base colour.
     var limit = TextDocument.highlightLimit
 
-    var isEnabled: Bool { lexer != nil && storage.length <= limit }
+    /// False for rich text: the colours and fonts are the document's own, nothing is written.
+    var isActive = true {
+        didSet { if isActive != oldValue, isActive { highlightAll() } }
+    }
+
+    var isEnabled: Bool { isActive && lexer != nil && storage.length <= limit }
 
     init(storage: NSTextStorage, baseFont: NSFont) {
         self.storage = storage
@@ -148,6 +153,7 @@ final class SyntaxHighlighter {
     // MARK: Lexing
 
     func highlightAll() {
+        guard isActive else { return }
         rebuildIndex()
         dirtyFirst = 0
         dirtyLast = lineStarts.count - 1

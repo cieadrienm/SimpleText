@@ -44,6 +44,7 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, NSMenuIt
         textView.frame = NSRect(x: 0, y: 0, width: 800, height: 600)
         textView.textContentStorage?.textStorage = document.textStorage
         textView.textContainer?.widthTracksTextView = true
+        textView.useRichText(document.isRichText)
         textView.configureAsCodeEditor()
         textView.delegate = self
         textView.languageProvider = { [unowned self] in document.language }
@@ -90,6 +91,7 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, NSMenuIt
         view = root
 
         highlighter = SyntaxHighlighter(storage: document.textStorage, baseFont: Preferences.editorFont)
+        highlighter.isActive = !document.isRichText
         applyPreferences()
         documentDidReload()
         observe()
@@ -175,6 +177,11 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, NSMenuIt
     /// After a read, a revert or a reinterpretation: everything about the text is new.
     private func documentDidReload() {
         lineIndexCache = nil
+        if textView.isRichText != document.isRichText {
+            textView.useRichText(document.isRichText)
+            highlighter.isActive = !document.isRichText
+            if !document.isRichText { textView.applyFont(Preferences.editorFont, tabWidth: Preferences.tabWidth) }
+        }
         textView.indentStyle = IndentStyle.detect(in: document.text, fallback: Preferences.indentStyle)
         textView.indentStyleFromPreferences = false
         textView.needsDisplay = true
@@ -187,11 +194,12 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, NSMenuIt
             lexerName = language.name
             highlighter.lexer = Lexers.lexer(for: language)
         }
-        model.languageName = document.language.name
+        model.isRichText = document.isRichText
+        model.languageName = document.isRichText ? "RTF" : document.language.name
         model.encodingName = TextFile.name(of: document.encoding) + (document.hasBOM ? " · BOM" : "")
         model.lineEndingName = document.lineEnding.rawValue
         model.indentLabel = textView.indentStyle.label
-        model.highlighted = highlighter.isEnabled || Lexers.lexer(for: language) == nil
+        model.highlighted = document.isRichText || highlighter.isEnabled || Lexers.lexer(for: language) == nil
         updateCaretStatus()
         scheduleStatistics()
         gutter.invalidate()
@@ -322,6 +330,19 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, NSMenuIt
         document.setLineEnding(ending)
     }
 
+    /// Format › Convertir. A saved file is never rewritten in the other format under its own name:
+    /// autosave would do it on its own. The conversion goes to a duplicate instead.
+    @objc func toggleRichText(_ sender: Any?) {
+        let target: TextDocument
+        if document.fileURL == nil {
+            target = document
+        } else {
+            guard let copy = try? document.duplicate() as? TextDocument else { return }
+            target = copy
+        }
+        target.convert(toRichText: !document.isRichText)
+    }
+
     @objc func goToLine(_ sender: Any?) {
         guard let window = view.window else { return }
         let alert = NSAlert()
@@ -352,10 +373,16 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, NSMenuIt
             item.state = Preferences.hideMarkdownMarkup ? .on : .off
         case #selector(setLanguage(_:)):
             item.state = (item.representedObject as? String) == document.language.name ? .on : .off
+            return !document.isRichText
         case #selector(setEncoding(_:)):
             item.state = (item.representedObject as? NSNumber)?.uintValue == document.encoding.rawValue ? .on : .off
+            return !document.isRichText
         case #selector(setLineEnding(_:)):
             item.state = (item.representedObject as? String) == document.lineEnding.rawValue ? .on : .off
+            return !document.isRichText
+        case #selector(toggleRichText(_:)):
+            item.title = document.isRichText ? "Convertir en texte brut" : "Convertir en texte enrichi"
+            if document.fileURL != nil { item.title += " (copie)" }
         default:
             break
         }

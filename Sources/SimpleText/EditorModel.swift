@@ -16,6 +16,8 @@ final class EditorModel {
     var lineEndingName = "LF"
     var indentLabel = ""
     var highlighted = true
+    /// RTF: fonts and colours are the file's; language, encoding and line-ending menus make no sense.
+    var isRichText = false
 }
 
 /// Status bar menus and buttons call back into the editor controller and the app.

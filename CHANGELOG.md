@@ -4,6 +4,7 @@
 
 - Présentation › Masquer les balises Markdown (`⌥⌘M`, aussi dans les réglages) : `#`, `**`, `*`, `~~`, `` ` ``, `[ ]`, `(url)` et `>` disparaissent de toutes les lignes sauf celle du curseur, où ils reviennent estompés pour éditer. Le fichier ne change pas.
 - Un réglage booléen peut se passer en argument (`-hideMarkdownMarkup 1`), utile avec `--snapshot`.
+- Texte enrichi : les fichiers RTF s'ouvrent avec leurs polices et couleurs, s'éditent (menu Format : gras `⌘B`, italique `⌘I`, souligné `⌘U`, alignement, polices `⌘T`, couleurs `⇧⌘C`) et s'enregistrent en RTF. Le noir s'affiche dans la couleur du thème et reste noir dans le fichier. Format › Convertir en texte enrichi ou brut, dans une copie pour un fichier déjà enregistré. RTFD (avec images) non pris en charge.
 
 ## 0.10.0 — 2026-10-23
 

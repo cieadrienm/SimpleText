@@ -9,6 +9,7 @@ enum MainMenu {
         menu.addItem(applicationMenu(delegate))
         menu.addItem(fileMenu())
         menu.addItem(editMenu())
+        menu.addItem(formatMenu())
         menu.addItem(viewMenu())
         menu.addItem(windowMenu())
         menu.addItem(helpMenu(delegate))
@@ -88,6 +89,28 @@ enum MainMenu {
         transform.add("Minuscules", #selector(NSResponder.lowercaseWord(_:)))
         transform.add("Capitales initiales", #selector(NSResponder.capitalizeWord(_:)))
         menu.add("Transformations", nil).submenu = transform
+        return menu.asItem()
+    }
+
+    /// Rich text (RTF) only; the text view disables every item in plain text.
+    private static func formatMenu() -> NSMenuItem {
+        let menu = NSMenu(title: "Format")
+        let font = NSMenu(title: "Police")
+        font.add("Gras", #selector(EditorTextView.toggleFontTrait(_:)), key: "b", tag: Int(NSFontTraitMask.boldFontMask.rawValue))
+        font.add("Italique", #selector(EditorTextView.toggleFontTrait(_:)), key: "i", tag: Int(NSFontTraitMask.italicFontMask.rawValue))
+        font.add("Souligné", #selector(NSText.underline(_:)), key: "u")
+        font.addItem(.separator())
+        font.add("Afficher les polices", #selector(EditorTextView.showFontPanel(_:)), key: "t")
+        menu.add("Police", nil).submenu = font
+        let text = NSMenu(title: "Texte")
+        text.add("Aligner à gauche", #selector(NSText.alignLeft(_:)), key: "{")
+        text.add("Centrer", #selector(NSText.alignCenter(_:)), key: "|")
+        text.add("Aligner à droite", #selector(NSText.alignRight(_:)), key: "}")
+        text.add("Justifier", #selector(NSTextView.alignJustified(_:)))
+        menu.add("Texte", nil).submenu = text
+        menu.add("Afficher les couleurs", #selector(EditorTextView.showColorPanel(_:)), key: "c", modifiers: [.command, .shift])
+        menu.addItem(.separator())
+        menu.add("Convertir en texte enrichi", #selector(EditorViewController.toggleRichText(_:)))
         return menu.asItem()
     }
 

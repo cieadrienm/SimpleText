@@ -23,7 +23,7 @@ struct AboutView: View {
         FeatureCard(
             id: "files", icon: "doc.text", tint: Theme.cyan,
             title: "Tout fichier texte",
-            detail: "Quelle que soit l’extension ; encodage et fins de ligne détectés et conservés, fichiers masqués dans le dialogue d’ouverture, onglets, versions."
+            detail: "Quelle que soit l’extension, RTF compris ; encodage et fins de ligne détectés et conservés, fichiers masqués dans le dialogue d’ouverture, onglets, versions."
         ),
         FeatureCard(
             id: "editing", icon: "text.alignleft", tint: Theme.green,
@@ -214,6 +214,8 @@ struct ShortcutsView: View {
             ("⇧⌘L", "Numéros de ligne"),
             ("⌥⌘M", "Masquer les balises Markdown"),
             ("⌘+ / ⌘- / ⌘0", "Taille du texte"),
+            ("⌘B / ⌘I / ⌘U", "Gras / italique / souligné (RTF)"),
+            ("⌘T / ⇧⌘C", "Polices / couleurs (RTF)"),
             ("⌘? / ⌘/", "Aide / Cette liste"),
         ]),
     ]

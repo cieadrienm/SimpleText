@@ -10,18 +10,23 @@ struct StatusBar: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Menu {
-                ForEach(Language.all) { language in
-                    Button(language.name) { actions.pickLanguage(language.name) }
+            if model.isRichText {
+                pill("RTF", tint: Theme.accent)
+                    .help("Texte enrichi : polices et couleurs du fichier")
+            } else {
+                Menu {
+                    ForEach(Language.all) { language in
+                        Button(language.name) { actions.pickLanguage(language.name) }
+                    }
+                } label: {
+                    pill(model.languageName, tint: Theme.accent)
                 }
-            } label: {
-                pill(model.languageName, tint: Theme.accent)
+                .menuStyle(.button)
+                .buttonStyle(.plain)
+                .menuIndicator(.hidden)
+                .fixedSize()
+                .help("Langage de coloration de ce document")
             }
-            .menuStyle(.button)
-            .buttonStyle(.plain)
-            .menuIndicator(.hidden)
-            .fixedSize()
-            .help("Langage de coloration de ce document")
 
             Text("Ln \(model.line), Col \(model.column)")
                 .foregroundStyle(Theme.textDim.swiftUI)
@@ -46,6 +51,7 @@ struct StatusBar: View {
                     .help("Au-delà de 4 Mo le texte n’est pas colorié")
             }
 
+            if !model.isRichText {
             divider
 
             Menu {
@@ -77,6 +83,7 @@ struct StatusBar: View {
             Text(model.indentLabel)
                 .foregroundStyle(Theme.textDim.swiftUI)
                 .help("Indentation lue dans le fichier")
+            }
 
             divider
 

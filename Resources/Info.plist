@@ -55,6 +55,7 @@
 			<key>LSItemContentTypes</key>
 			<array>
 				<string>public.plain-text</string>
+				<string>public.rtf</string>
 				<string>public.text</string>
 				<string>public.source-code</string>
 				<string>public.script</string>
