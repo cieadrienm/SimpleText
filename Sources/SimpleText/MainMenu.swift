@@ -143,8 +143,7 @@ enum MainMenu {
             item.representedObject = ending.rawValue
         }
         menu.add("Fins de ligne", nil).submenu = endings
-        menu.addItem(.separator())
-        menu.add("Activer le mode plein écran", #selector(NSWindow.toggleFullScreen(_:)), key: "f", modifiers: [.command, .control])
+        // AppKit appends « Activer le mode plein écran » (⌃⌘F) and the tab bar items itself (D14).
         return menu.asItem()
     }
 

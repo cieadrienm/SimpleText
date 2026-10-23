@@ -29,7 +29,7 @@ swift Scripts/make-icon.swift                 # redessine Resources/icon.icns
 
 ## Règles qui ont coûté cher
 - **Ne jamais lire `textView.layoutManager`** : l'accès rétrograde la vue en TextKit 1 sans un mot (D4). `textLayoutManager` est la seule porte.
-- **Pas de sous-menu « Ouvrir l'élément récent » à la main** : AppKit l'insère lui-même dans l'app empaquetée (D14) ; le debug, sans `Info.plist`, ne le montre pas, et les menus se vérifient avec `SIMPLETEXT_SNAPSHOT_MENU`.
+- **Pas de sous-menu « Ouvrir l'élément récent », ni de « Plein écran », à la main** : AppKit les insère lui-même dans l'app empaquetée (D14), avec « Partager » et la barre d'onglets ; le debug, sans `Info.plist`, ne les montre pas, et les menus se vérifient avec `SIMPLETEXT_SNAPSHOT_MENU` sur le bundle.
 - **Pas d'`NSRulerView`** : avec une règle verticale la vue texte n'est plus dessinée du tout sur macOS 15 (D5). La gouttière est `LineNumberGutter`, une vue sœur.
 - **`cacheDisplay` ne voit pas le texte de TextKit 2** : `--snapshot` passe par `CGWindowListCreateImage` (D16).
 - **Le groupe d'annulation se ferme avec le tour de boucle** : dans un test, `RunLoop.main.run(until:)` avant de lire `isDocumentEdited`.
