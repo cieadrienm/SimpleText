@@ -2,6 +2,7 @@ import AppKit
 
 /// `SimpleText --snapshot out.png [file]`: opens the file (or a sample), renders the window, exits.
 /// The only way to look at the app without a screen (DECISIONS.md).
+@MainActor
 enum Snapshot {
     static let sample = """
     // SimpleText — aperçu
@@ -31,9 +32,21 @@ enum Snapshot {
 
     static func run(output: String, input: String?) {
         let controller = NSDocumentController.shared
+        let environment = ProcessInfo.processInfo.environment
+        let delay = Double(environment["SIMPLETEXT_SNAPSHOT_DELAY"] ?? "") ?? 0.6
         let finish: (NSDocument?) -> Void = { document in
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-                guard let window = document?.windowControllers.first?.window ?? NSApp.windows.first,
+            // SIMPLETEXT_SNAPSHOT_WINDOW=about|shortcuts|settings|help photographs that window instead.
+            let delegate = NSApp.delegate as? AppDelegate
+            var auxiliary: NSWindow?
+            switch environment["SIMPLETEXT_SNAPSHOT_WINDOW"] {
+            case "about": delegate?.showAbout(nil); auxiliary = AboutWindowController.shared.window
+            case "shortcuts": delegate?.showShortcuts(nil); auxiliary = ShortcutsWindowController.shared.window
+            case "settings": delegate?.showSettings(nil); auxiliary = SettingsWindowController.shared.window
+            case "help": delegate?.showHelp(nil); auxiliary = HelpWindowController.shared.window
+            default: break
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                guard let window = auxiliary ?? document?.windowControllers.first?.window ?? NSApp.windows.first,
                       let view = window.contentView else {
                     fputs("snapshot error: no window\n", stderr)
                     exit(2)

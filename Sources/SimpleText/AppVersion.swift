@@ -1,7 +1,14 @@
-import Foundation
+import AppKit
 
 /// The version stamped into the bundle by `Scripts/bundle.sh`; "dev" when run from `swift run` or the tests.
 enum AppVersion {
+    /// The icon from the bundle, or from the repository when run with `swift run` or the tests.
+    static let icon: NSImage = {
+        if Bundle.main.object(forInfoDictionaryKey: "CFBundleIconFile") != nil { return NSApp.applicationIconImage }
+        let repository = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        return NSImage(contentsOf: repository.appendingPathComponent("Resources/icon.png")) ?? NSApp.applicationIconImage
+    }()
+
     static let name = "SimpleText"
     static let bundleIdentifier = "net.cieadrienm.simpletext"
 

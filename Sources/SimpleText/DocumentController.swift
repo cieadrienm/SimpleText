@@ -24,16 +24,17 @@ final class DocumentController: NSDocumentController {
     }
 
     override func beginOpenPanel(_ openPanel: NSOpenPanel, forTypes inTypes: [String]?, completionHandler: @escaping (Int) -> Void) {
-        configure(openPanel)
+        configurePanel(openPanel)
         super.beginOpenPanel(openPanel, forTypes: nil, completionHandler: completionHandler)
     }
 
     override func runModalOpenPanel(_ openPanel: NSOpenPanel, forTypes types: [String]?) -> Int {
-        configure(openPanel)
+        configurePanel(openPanel)
         return super.runModalOpenPanel(openPanel, forTypes: nil)
     }
 
-    private func configure(_ panel: NSOpenPanel) {
+    /// Any file, hidden ones on request; the checkbox in the panel changes it live and remembers it.
+    func configurePanel(_ panel: NSOpenPanel) {
         panel.canChooseDirectories = false
         panel.canChooseFiles = true
         panel.allowsMultipleSelection = true
@@ -53,7 +54,11 @@ final class DocumentController: NSDocumentController {
         currentPanel = panel
     }
 
-    @objc private func toggleHiddenFiles(_ sender: NSButton) {
+    var hiddenFilesCheckbox: NSButton? {
+        currentPanel?.accessoryView?.subviews.compactMap { $0 as? NSButton }.first
+    }
+
+    @objc func toggleHiddenFiles(_ sender: NSButton) {
         let shown = sender.state == .on
         Preferences.showHiddenFiles = shown
         currentPanel?.showsHiddenFiles = shown

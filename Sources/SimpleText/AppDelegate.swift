@@ -3,7 +3,9 @@ import SimpleTextCore
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
-    private(set) var documentController: DocumentController!
+    var documentController: DocumentController!
+    /// Where the recent files come from; the tests hand in their own list.
+    lazy var recentDocumentURLs: () -> [URL] = { [unowned self] in documentController.recentDocumentURLs }
     private var snapshotRequest: (output: String, input: String?)?
 
     func applicationWillFinishLaunching(_ notification: Notification) {
@@ -14,6 +16,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         documentController = DocumentController()
         NSApp.mainMenu = MainMenu.build(delegate: self)
         NSWindow.allowsAutomaticWindowTabbing = true
+        // Run from the repository there is no bundle icon; the Dock shows the drawn one anyway.
+        if Bundle.main.object(forInfoDictionaryKey: "CFBundleIconFile") == nil { NSApp.applicationIconImage = AppVersion.icon }
 
         let args = Array(CommandLine.arguments.dropFirst())
         if let index = args.firstIndex(of: "--snapshot") {
@@ -86,7 +90,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// Fichier ▸ Ouvrir l’élément récent, rebuilt from the document controller each time it opens.
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
-        let urls = documentController.recentDocumentURLs
+        let urls = recentDocumentURLs()
         if urls.isEmpty {
             let empty = NSMenuItem(title: "Aucun élément récent", action: nil, keyEquivalent: "")
             empty.isEnabled = false

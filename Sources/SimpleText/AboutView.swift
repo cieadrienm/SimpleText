@@ -126,7 +126,7 @@ struct AboutView: View {
     }
 
     private var appIcon: some View {
-        Image(nsImage: NSApp.applicationIconImage)
+        Image(nsImage: AppVersion.icon)
             .resizable()
             .interpolation(.high)
             .frame(width: 68, height: 68)

@@ -5,7 +5,7 @@ import WebKit
 /// A dark auxiliary window holding a SwiftUI view, brought back rather than recreated.
 @MainActor
 class HostedWindowController {
-    private var window: NSWindow?
+    private(set) var window: NSWindow?
     private let title: String
     private let size: NSSize
     private let autosaveName: String
@@ -37,9 +37,8 @@ class HostedWindowController {
         window.contentView = hosting
         window.setFrameAutosaveName(autosaveName)
         if window.frame.origin == .zero { window.center() }
-        window.animationBehavior = .documentWindow
-        window.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
+        window.animationBehavior = .none
+        window.fadeIn()
         self.window = window
     }
 
@@ -82,7 +81,7 @@ final class SettingsWindowController: HostedWindowController {
 @MainActor
 final class HelpWindowController: NSObject, WKNavigationDelegate {
     static let shared = HelpWindowController()
-    private var window: NSWindow?
+    private(set) var window: NSWindow?
     private var webView: WKWebView?
 
     /// In the app bundle, or in the repository when run with `swift run` or `swift test`.
@@ -128,8 +127,7 @@ final class HelpWindowController: NSObject, WKNavigationDelegate {
         window.isReleasedWhenClosed = false
         window.setFrameAutosaveName("SimpleTextHelp")
         if window.frame.origin == .zero { window.center() }
-        window.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
+        window.fadeIn()
         self.window = window
         self.webView = webView
     }
@@ -141,5 +139,28 @@ final class HelpWindowController: NSObject, WKNavigationDelegate {
             return decisionHandler(.cancel)
         }
         decisionHandler(.allow)
+    }
+}
+
+extension NSWindow {
+    /// Brings the window up through a short fade and lift, or at once when motion is reduced.
+    func fadeIn() {
+        let reduced = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        if reduced {
+            makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+        let target = frame
+        alphaValue = 0
+        setFrame(target.offsetBy(dx: 0, dy: -8), display: false)
+        makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.18
+            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            animator().alphaValue = 1
+            animator().setFrame(target, display: true)
+        }
     }
 }
