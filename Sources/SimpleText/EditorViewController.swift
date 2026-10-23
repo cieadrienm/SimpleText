@@ -11,6 +11,8 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, NSMenuIt
     private(set) var gutter: LineNumberGutter!
     private var gutterWidth: NSLayoutConstraint!
     private var statusHost: NSHostingView<StatusBar>!
+    private(set) var highlighter: SyntaxHighlighter!
+    private var lexerName: String?
     private var lineIndexCache: LineIndex?
     private var statisticsTimer: Timer?
     private var observers: [NSObjectProtocol] = []
@@ -87,6 +89,7 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, NSMenuIt
         ])
         view = root
 
+        highlighter = SyntaxHighlighter(storage: document.textStorage)
         applyPreferences()
         documentDidReload()
         observe()
@@ -172,11 +175,16 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, NSMenuIt
     }
 
     func refreshDocumentState() {
+        let language = document.language
+        if lexerName != language.name {
+            lexerName = language.name
+            highlighter.lexer = Lexers.lexer(for: language)
+        }
         model.languageName = document.language.name
         model.encodingName = TextFile.name(of: document.encoding) + (document.hasBOM ? " · BOM" : "")
         model.lineEndingName = document.lineEnding.rawValue
         model.indentLabel = textView.indentStyle.label
-        model.highlighted = document.textStorage.length <= TextDocument.highlightLimit
+        model.highlighted = highlighter.isEnabled || Lexers.lexer(for: language) == nil
         updateCaretStatus()
         scheduleStatistics()
         gutter.invalidate()

@@ -38,6 +38,7 @@ enum Snapshot {
                     fputs("snapshot error: no window\n", stderr)
                     exit(2)
                 }
+                (window.contentViewController as? EditorViewController)?.highlighter.flush()
                 view.layoutSubtreeIfNeeded()
                 view.displayIfNeeded()
                 guard let png = render(window) else { exit(3) }
