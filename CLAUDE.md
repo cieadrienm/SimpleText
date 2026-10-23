@@ -9,7 +9,7 @@ SimpleText est un éditeur de texte et de code natif pour macOS (Swift, AppKit, 
 
 ## Façon de travailler
 - Répondre en français. Code, commentaires et commits en anglais, avec la ligne `Co-Authored-By` de l'harnais.
-- Pas de remote pour l'instant ; aucun push sans Adrien. Un commit par phase, `swift build` et `swift test` verts.
+- Dépôts : `origin` est GitHub `cieadrienm/SimpleText` (privé) et pousse aussi vers Gitea `amcb/simpletext` (remote `gitea`), comme Simple Recorder ; aucun push sans Adrien. Un commit par phase, `swift build` et `swift test` verts.
 - Version : `VERSION` dans `Scripts/bundle.sh`, changée là seulement (correctif : x.y.Z ; fonction : x.Y.0), avec une ligne dans `CHANGELOG.md` et un tag git `vX.Y.Z` quand Adrien déploie.
 - Les décisions à prendre vont dans `.project-map/decisions.md` (question, options, défaut, date) ; sans réponse, continuer avec le défaut.
 

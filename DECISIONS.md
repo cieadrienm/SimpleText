@@ -36,6 +36,7 @@ Journal des choix structurants. Chaque entrée : le choix, pourquoi, et ce qu'on
 - **D17 — Identifiant `net.cieadrienm.simpletext`**, version **0.9.0** dans `Scripts/bundle.sh` seulement (correctif : x.y.Z ; fonction : x.Y.0), ligne dans `CHANGELOG.md`, tag `vX.Y.Z` quand Adrien déploie. `Scripts/bundle.sh` construit et signe `build/SimpleText.app` ; `INSTALL=1` le copie dans /Applications.
 - **D18 — L'icône est dessinée par un script** (`Scripts/make-icon.swift`) : la tuile sombre de la famille, cinq lignes de code ambre et cyan, le curseur rouge de la tête de lecture de SimpleAudio.
 - **D19 — Commits par phase, jamais de push** sans Adrien ; `swift build` et `swift test` verts à chaque commit.
+- **D23 — Hébergé comme Simple Recorder** (23 octobre 2026, demandé par Adrien) : GitHub `cieadrienm/SimpleText`, privé comme tous ses dépôts GitHub, et Gitea `amcb/simpletext` sur le NAS, public dans l'instance comme `simple` et `OSCScore`. `origin` pointe sur GitHub et pousse vers les deux ; un remote `gitea` sert à lire le NAS. Branche `master`, tags `vX.Y.Z`.
 
 ## Markdown
 
