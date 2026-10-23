@@ -1,10 +1,12 @@
 import Foundation
 
 /// Markdown: headings, lists, quotes, rules, fenced code (coloured by the fence's language), inline
-/// code, emphasis, links and inline HTML. Modes: 0 text, 1 inside a fence (aux = language index + 1,
-/// inner/innerAux = that lexer's state), 2 inside an HTML comment.
+/// code, emphasis, strikethrough, links and inline HTML. Modes: 0 text, 1 inside a fence (aux =
+/// language index + 1, inner/innerAux = that lexer's state), 2 inside an HTML comment.
 public struct MarkdownLexer: Lexer {
     public init() {}
+
+    public var usesFonts: Bool { true }
 
     private static let fenceTick: UInt16 = 96   // `
     private static let fenceTilde: UInt16 = 126 // ~
@@ -125,7 +127,7 @@ public struct MarkdownLexer: Lexer {
         return count >= 3
     }
 
-    /// Inline spans: code, strong, emphasis, links, images, autolinks, HTML tags, escapes.
+    /// Inline spans: code, strong, emphasis, strikethrough, links, images, autolinks, HTML tags, escapes.
     private func inline(_ line: Line, from start: Int) -> [Token] {
         var tokens: [Token] = []
         var i = start
@@ -157,6 +159,15 @@ public struct MarkdownLexer: Lexer {
                     i = close + width
                 } else {
                     i += width
+                }
+            case 126 /* ~ */ where line.at(i + 1) == 126:
+                let next = line.at(i + 2)
+                guard next != 0, !Chars.isSpace(next), next != c else { i += 2; continue }
+                if let close = line.find([c, c], from: i + 2), !Chars.isSpace(line[close - 1]) {
+                    tokens.append(Token(.strikethrough, i..<close + 2))
+                    i = close + 2
+                } else {
+                    i += 2
                 }
             case 33 /* ! */ where line.at(i + 1) == 91, 91 /* [ */:
                 let textStart = c == 33 ? i + 1 : i

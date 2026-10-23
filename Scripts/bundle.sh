@@ -10,7 +10,7 @@ set -e
 cd "$(dirname "$0")/.."
 # The version shown by the Finder, About and the status bar: bump it here, and only here (CHANGELOG.md says
 # what changed; a release is tagged vX.Y.Z). The build number counts commits.
-VERSION="0.9.0"
+VERSION="0.10.0"
 BUILD="$(git rev-list --count HEAD 2>/dev/null || echo 1)"
 
 if [ ! -f Resources/icon.icns ]; then

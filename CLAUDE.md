@@ -50,5 +50,5 @@ swift Scripts/make-icon.swift                 # redessine Resources/icon.icns
 - Un document est son `NSTextStorage` : lecture, édition, retour en arrière et enregistrement passent tous par lui.
 - Un fichier est réécrit avec l'encodage et les fins de ligne lus, sauf changement explicite dans la barre d'état.
 - Le langage vient du nom du fichier ou du choix de l'utilisateur, jamais d'une analyse du contenu.
-- La coloration ne change que des couleurs, jamais le texte ni l'historique d'annulation.
+- La coloration ne change que des couleurs, et des polices pour le seul lexer qui déclare `usesFonts` (Markdown, D20) ; jamais le texte ni l'historique d'annulation. Chaque ligne repart de la police nue avant ses jetons.
 - Tout nouveau comportement a un test ; un défaut corrigé a d'abord un test qui échoue.

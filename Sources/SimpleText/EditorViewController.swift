@@ -89,7 +89,7 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, NSMenuIt
         ])
         view = root
 
-        highlighter = SyntaxHighlighter(storage: document.textStorage)
+        highlighter = SyntaxHighlighter(storage: document.textStorage, baseFont: Preferences.editorFont)
         applyPreferences()
         documentDidReload()
         observe()
@@ -124,6 +124,7 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, NSMenuIt
         let font = Preferences.editorFont
         if lastAppliedFont != font || textView.tabWidth != Preferences.tabWidth {
             textView.applyFont(font, tabWidth: Preferences.tabWidth)
+            highlighter.baseFont = font
             lastAppliedFont = font
             gutter.font = NSFont.monospacedDigitSystemFont(ofSize: max(9, font.pointSize - 2), weight: .regular)
         }

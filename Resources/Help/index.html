@@ -158,9 +158,11 @@ mark { background: rgba(255,180,84,.35); color: inherit; border-radius: 3px; }
     <div class="card"><b>Swift</b><span>Mots-clés, attributs <code>@MainActor</code>, chaînes à interpolation, chaînes multilignes et brutes, commentaires imbriqués, <code>#if</code>.</span></div>
     <div class="card"><b>C#, Java, Kotlin</b><span>Chaînes verbatim et interpolées, attributs, génériques.</span></div>
     <div class="card"><b>HTML et PHP</b><span>Balises, attributs, entités, commentaires ; les blocs <code>&lt;?php … ?&gt;</code>, <code>&lt;script&gt;</code> et <code>&lt;style&gt;</code> sont colorés dans leur propre langage. Un fichier <code>.php</code> commence en HTML.</span></div>
-    <div class="card"><b>Markdown</b><span>Titres, listes et cases à cocher, citations, emphase, code en ligne, liens, et les blocs <code>```swift</code> colorés en Swift.</span></div>
+    <div class="card"><b>Markdown</b><span>Mis en forme en écrivant : titres plus grands, gras, italique, barré, liens soulignés, code en ligne sur une tuile, citations en italique ; les blocs <code>```swift</code> sont colorés en Swift. Les marqueurs restent visibles, estompés.</span></div>
     <div class="card"><b>Et les autres</b><span>JavaScript, TypeScript, JSON, CSS et SCSS, Python, Shell, YAML, XML et plist, TOML et INI, SQL, Go, Rust, Ruby, Lua, Perl, Makefile, Dockerfile, Metal et GLSL, diff.</span></div>
   </div>
+  <h3>Le Markdown, mis en forme</h3>
+  <p>Un fichier <code>.md</code> s'affiche interprété tout en restant du texte : <code># Titre</code> devient un titre en gras et plus grand, <code>**gras**</code> passe en gras, <code>*italique*</code> en italique, <code>~~barré~~</code> est barré, <code>[lien](url)</code> est souligné, <code>`code`</code> prend une tuile. Les marqueurs ne disparaissent pas, ils s'estompent ; ce que vous enregistrez est exactement ce que vous tapez. La police reste celle de l'éditeur, les tableaux et le code restent alignés.</p>
   <h3>Les couleurs</h3>
   <div class="swatches">
     <span class="swatch"><i style="background:#FFB454"></i>mots-clés, titres</span>

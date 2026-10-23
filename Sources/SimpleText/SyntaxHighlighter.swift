@@ -4,6 +4,8 @@ import SimpleTextCore
 /// Colours the document's text storage from a lexer, one line at a time. Each line's end state is
 /// kept, so after an edit only the changed lines and those whose state differs are lexed again.
 /// Attribute changes go straight to the storage, outside the undo manager: they never dirty the document.
+/// A lexer with `usesFonts` (Markdown) also gets fonts, underlines and backgrounds: the source stays
+/// as typed, formatted in place.
 final class SyntaxHighlighter {
     private let storage: NSTextStorage
     /// UTF-16 offset where each line starts; the first is always 0.
@@ -16,16 +18,32 @@ final class SyntaxHighlighter {
     private var observer: NSObjectProtocol?
 
     var lexer: (any Lexer)? {
-        didSet { highlightAll() }
+        didSet {
+            if oldValue?.usesFonts == true || lexer?.usesFonts == true { resetStyles(NSRange(location: 0, length: storage.length)) }
+            highlightAll()
+        }
     }
+
+    /// The font the text view gives every character; the Markdown variants derive from it.
+    var baseFont: NSFont {
+        didSet {
+            guard baseFont != oldValue else { return }
+            fonts = MarkupFonts(base: baseFont)
+            if lexer?.usesFonts == true { highlightAll() }
+        }
+    }
+    private var fonts: MarkupFonts
+    private var usesFonts: Bool { lexer?.usesFonts == true }
 
     /// Lexing stops above this size; the text stays in the base colour.
     var limit = TextDocument.highlightLimit
 
     var isEnabled: Bool { lexer != nil && storage.length <= limit }
 
-    init(storage: NSTextStorage) {
+    init(storage: NSTextStorage, baseFont: NSFont) {
         self.storage = storage
+        self.baseFont = baseFont
+        fonts = MarkupFonts(base: baseFont)
         rebuildIndex()
         observer = NotificationCenter.default.addObserver(
             forName: NSTextStorage.didProcessEditingNotification, object: storage, queue: nil
@@ -120,9 +138,11 @@ final class SyntaxHighlighter {
         dirtyFirst = nil
         dirtyLast = 0
         if storage.length > 0 {
+            let all = NSRange(location: 0, length: storage.length)
             storage.beginEditing()
-            storage.removeAttribute(.foregroundColor, range: NSRange(location: 0, length: storage.length))
-            storage.addAttribute(.foregroundColor, value: Theme.text, range: NSRange(location: 0, length: storage.length))
+            storage.removeAttribute(.foregroundColor, range: all)
+            storage.addAttribute(.foregroundColor, value: Theme.text, range: all)
+            if usesFonts { resetStyles(all) }
             storage.endEditing()
         }
     }
@@ -155,8 +175,9 @@ final class SyntaxHighlighter {
             let count = max(0, end - start)
             if buffer.count < count { buffer = [UInt16](repeating: 0, count: count) }
             if count > 0 { text.getCharacters(&buffer, range: NSRange(location: start, length: count)) }
-            let tokens = lexer.tokenize(buffer[0..<count], state: &state)
-            apply(tokens, lineStart: start, lineLength: count)
+            let line = buffer[0..<count]
+            let tokens = lexer.tokenize(line, state: &state)
+            apply(tokens, line: line, lineStart: start)
             let previous = endStates[i]
             endStates[i] = state
             i += 1
@@ -176,18 +197,98 @@ final class SyntaxHighlighter {
         while dirtyFirst != nil { relexDirtyLines() }
     }
 
-    private func apply(_ tokens: [Token], lineStart: Int, lineLength: Int) {
+    private func apply(_ tokens: [Token], line: Line, lineStart: Int) {
+        let lineLength = line.count
         guard lineLength > 0 else { return }
-        storage.addAttribute(.foregroundColor, value: Theme.text, range: NSRange(location: lineStart, length: lineLength))
+        let lineRange = NSRange(location: lineStart, length: lineLength)
+        storage.addAttribute(.foregroundColor, value: Theme.text, range: lineRange)
+        if usesFonts { resetStyles(lineRange) }
         for token in tokens where token.kind != .plain {
             let range = NSRange(location: lineStart + token.range.lowerBound, length: token.range.count)
             storage.addAttribute(.foregroundColor, value: Theme.color(for: token.kind), range: range)
+            if usesFonts { style(token, line: line, range: range) }
+        }
+    }
+
+    /// One font, no underline, strike or background: what every line starts from before its tokens.
+    private func resetStyles(_ range: NSRange) {
+        guard range.length > 0 else { return }
+        storage.addAttribute(.font, value: fonts.base, range: range)
+        for key in [NSAttributedString.Key.underlineStyle, .strikethroughStyle, .backgroundColor, .obliqueness] {
+            storage.removeAttribute(key, range: range)
+        }
+    }
+
+    /// Markdown shown formatted, markup kept: bigger bold headings, bold, italic, struck, underlined
+    /// links, inline code on a tile, and the markers themselves faded so the words stand out.
+    private func style(_ token: Token, line: Line, range: NSRange) {
+        func fade(_ leading: Int, _ trailing: Int = 0) {
+            let leading = min(leading, range.length), trailing = min(trailing, range.length - leading)
+            if leading > 0 { storage.addAttribute(.foregroundColor, value: Theme.textFaint, range: NSRange(location: range.location, length: leading)) }
+            if trailing > 0 { storage.addAttribute(.foregroundColor, value: Theme.textFaint, range: NSRange(location: NSMaxRange(range) - trailing, length: trailing)) }
+        }
+        func italic(_ range: NSRange) {
+            storage.addAttribute(.font, value: fonts.italic, range: range)
+            if fonts.italicIsSynthesised { storage.addAttribute(.obliqueness, value: 0.2, range: range) }
+        }
+        switch token.kind {
+        case .heading:
+            var i = line.startIndex
+            while i < line.endIndex, line[i] == 32 || line[i] == 9 { i += 1 }
+            let hashes = i
+            while i < line.endIndex, line[i] == 35 { i += 1 }
+            let level = min(max(i - hashes, 1), fonts.headings.count)
+            storage.addAttribute(.font, value: fonts.headings[level - 1], range: range)
+            storage.addAttribute(.foregroundColor, value: Theme.textFaint, range: NSRange(location: range.location + hashes - line.startIndex, length: i - hashes))
+        case .strong:
+            storage.addAttribute(.font, value: fonts.bold, range: range)
+            fade(2, 2)
+        case .emphasis:
+            italic(range)
+            fade(1, 1)
+        case .strikethrough:
+            storage.addAttribute(.strikethroughStyle, value: NSUnderlineStyle.single.rawValue, range: range)
+            fade(2, 2)
+        case .codeSpan where token.range.count < line.count:
+            var ticks = 0
+            while token.range.lowerBound + ticks < line.endIndex, line[token.range.lowerBound + ticks] == 96 { ticks += 1 }
+            storage.addAttribute(.backgroundColor, value: Theme.laneAlt, range: range)
+            fade(ticks, ticks)
+        case .link:
+            storage.addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue, range: range)
+        case .quote:
+            italic(range)
+        case .listMarker:
+            storage.addAttribute(.font, value: fonts.bold, range: range)
+        default:
+            break
         }
     }
 }
 
+/// The editor font's variants used by formatted Markdown, derived once per base font.
+struct MarkupFonts {
+    let base: NSFont
+    let bold: NSFont
+    let italic: NSFont
+    /// Index = heading level − 1; the first three grow, the rest are only bold.
+    let headings: [NSFont]
+    /// The family has no italic face: the text view slants the regular one instead.
+    let italicIsSynthesised: Bool
+
+    init(base: NSFont) {
+        let boldFont = NSFont(descriptor: base.fontDescriptor.withSymbolicTraits(.bold), size: base.pointSize) ?? base
+        let italicFont = NSFont(descriptor: base.fontDescriptor.withSymbolicTraits(.italic), size: base.pointSize) ?? base
+        self.base = base
+        bold = boldFont
+        italic = italicFont
+        italicIsSynthesised = !italicFont.fontDescriptor.symbolicTraits.contains(.italic)
+        headings = [1.4, 1.25, 1.1, 1, 1, 1].map { NSFont(descriptor: boldFont.fontDescriptor, size: base.pointSize * $0) ?? boldFont }
+    }
+}
+
 extension Theme {
-    /// The colour of each token kind. Colour only: fonts never change, so the layout never moves.
+    /// The colour of each token kind; `SyntaxHighlighter.style` adds the fonts for Markdown.
     static func color(for kind: TokenKind) -> NSColor {
         switch kind {
         case .plain: return text
@@ -200,7 +301,7 @@ extension Theme {
         case .preprocessor, .attribute, .meta: return purple
         case .function: return blue
         case .property, .variable: return pink
-        case .operator: return textDim
+        case .operator, .strikethrough: return textDim
         case .punctuation: return punctuationColor
         case .invalid, .deleted: return red
         }

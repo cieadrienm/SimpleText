@@ -18,7 +18,7 @@ struct AboutView: View {
         FeatureCard(
             id: "languages", icon: "chevron.left.forwardslash.chevron.right", tint: Theme.accent,
             title: "Coloration par langage",
-            detail: "C, Objective-C, C#, Swift, HTML, PHP, Markdown, JavaScript, Python, Shell, JSON, YAML, CSS… choisis d’après l’extension, ou dans la barre d’état."
+            detail: "C, Objective-C, C#, Swift, HTML, PHP, JavaScript, Python, Shell, JSON, YAML, CSS… choisis d’après l’extension, ou dans la barre d’état. Markdown mis en forme en écrivant."
         ),
         FeatureCard(
             id: "files", icon: "doc.text", tint: Theme.cyan,

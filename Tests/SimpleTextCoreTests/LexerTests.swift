@@ -157,7 +157,7 @@ struct LexerTests {
     func markdown() {
         let source = """
         # Titre
-        - un *mot* en **gras** et `code`
+        - un *mot* en **gras** et `code` ~~barré~~
         1. [lien](http://x.y) ![img](a.png)
         > citation
         ```swift
@@ -170,6 +170,7 @@ struct LexerTests {
         #expect(kind(of: "*mot*", in: source, "Markdown") == .emphasis)
         #expect(kind(of: "**gras**", in: source, "Markdown") == .strong)
         #expect(kind(of: "`code`", in: source, "Markdown") == .codeSpan)
+        #expect(kind(of: "~~barré~~", in: source, "Markdown") == .strikethrough)
         #expect(kind(of: "1.", in: source, "Markdown") == .listMarker)
         #expect(kind(of: "[lien]", in: source, "Markdown") == .link)
         #expect(kind(of: "(http://x.y)", in: source, "Markdown") == .meta)

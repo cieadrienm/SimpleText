@@ -27,6 +27,7 @@ public enum TokenKind: UInt8, CaseIterable, Sendable {
     case codeSpan
     case listMarker
     case quote
+    case strikethrough
     case invalid
     case inserted
     case deleted
@@ -62,6 +63,13 @@ public typealias Line = ArraySlice<UInt16>
 
 public protocol Lexer: Sendable {
     func tokenize(_ line: Line, state: inout LexState) -> [Token]
+    /// True when the editor may change fonts for this lexer's tokens (Markdown shown formatted);
+    /// every other language keeps one font, so its layout never moves while it colours.
+    var usesFonts: Bool { get }
+}
+
+public extension Lexer {
+    var usesFonts: Bool { false }
 }
 
 // MARK: - Characters

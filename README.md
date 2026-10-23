@@ -5,6 +5,7 @@
 ## Fonctionnalités
 
 - **Coloration de syntaxe par langage** : C, Objective-C (y compris `.h`), C#, Swift, HTML, PHP, Markdown, JavaScript, TypeScript, JSON, CSS, Python, Shell, YAML, XML, SQL, Go, Rust, Java, Lua, Ruby, Makefile… choisie d'après l'extension, changeable dans la barre d'état ou le menu Présentation.
+- **Markdown mis en forme en écrivant** : titres plus grands, gras, italique, barré, liens soulignés, code sur une tuile, marqueurs estompés ; le balisage reste visible et le texte reste du texte.
 - **Tout fichier texte s'ouvre**, quelle que soit son extension ou sans extension ; les binaires sont refusés. Encodage (UTF-8, UTF-16, Latin 1, Windows 1252, Mac OS Roman…) et fins de ligne (LF, CRLF, CR) détectés et conservés à l'identique ; indentation lue dans le fichier.
 - **Édition de code** : numéros de ligne, ligne courante, retour à la ligne au choix, indentation automatique, `⇥`/`⇧⇥` sur une sélection, lignes dupliquées (`⌘D`), supprimées (`⇧⌘K`) ou déplacées (`⌥↑`/`⌥↓`), commentaires en une touche (`⌥⌘/`), recherche et remplacement (`⌘F`, `⌥⌘F`), aller à la ligne (`⌘L`).
 - **Documents à la Mac** : onglets, Ouvrir l'élément récent, Dupliquer, Renommer, Déplacer, versions, enregistrement automatique, fenêtres restaurées au lancement, glisser-déposer de fichiers sur la fenêtre ou le Dock.
@@ -39,7 +40,7 @@ INSTALL=1 Scripts/bundle.sh          # et la copie dans /Applications
 
 ## Taille et vitesse
 
-| | SimpleText 0.9.0 | MarkText 0.24 (Electron, écarté) |
+| | SimpleText 0.10.0 | MarkText 0.24 (Electron, écarté) |
 | --- | --- | --- |
 | Application macOS | **3,0 Mo** (universelle, arm64 + x86_64) | 412 Mo |
 | Du lancement à la capture PNG d'un fichier Swift ouvert (`--snapshot`, délai 50 ms) | 0,67 s | non mesuré |

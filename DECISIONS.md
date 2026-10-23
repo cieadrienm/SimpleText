@@ -17,7 +17,7 @@ Journal des choix structurants. Chaque entrée : le choix, pourquoi, et ce qu'on
 - **D8 — Tout fichier texte s'ouvre, quelle que soit son extension ou sans extension.** `DocumentController.typeForContents` renvoie un seul type après avoir vérifié l'absence d'octet nul dans les 8 premiers Ko ; un fichier binaire est refusé avec un message. `.h` est lu comme Objective-C (ses règles couvrent le C ; eMotion et Simple Recorder sont en Objective-C) ; le langage d'un document se change dans la barre d'état ou le menu Présentation.
 - **D9 — Encodage et fins de ligne.** Marque d'ordre des octets, puis UTF-8, puis l'encodage par défaut des réglages, puis la détection de Foundation (`NSString.stringEncoding(for:…)`), puis Latin 1. CR et CRLF sont normalisés en LF en mémoire, l'original est restitué à l'écriture (test octet pour octet). Changer l'encodage d'un document propre le relit depuis le disque ; d'un document modifié, ne change que l'écriture.
 - **D10 — Indentation lue dans le fichier** (tabulations, sinon le plus petit retrait rencontré : 2, 3, 4 ou 8 espaces), les réglages ne servant qu'aux nouveaux documents. La touche ⇥ complète jusqu'à la colonne suivante ; ↩ reprend le retrait de la ligne et en ajoute un après `{`, `(` ou `[`, et place le curseur entre les accolades quand la fermante suit.
-- **D11 — Coloration par des lexers maison dans `SimpleTextCore`**, pilotés par des tables (mots-clés, commentaires, chaînes, nombres, préprocesseur, annotations) ; Markdown et HTML (avec PHP, JS et CSS imbriqués) ont leur propre code. Couleur seulement, jamais de gras ni d'italique : la mise en page ne bouge pas quand un mot change de rôle. Au-delà de 4 Mo le texte n'est pas colorié (la barre d'état le dit). Écarté : tree-sitter ou toute bibliothèque (D1).
+- **D11 — Coloration par des lexers maison dans `SimpleTextCore`**, pilotés par des tables (mots-clés, commentaires, chaînes, nombres, préprocesseur, annotations) ; Markdown et HTML (avec PHP, JS et CSS imbriqués) ont leur propre code. Couleur seulement, jamais de gras ni d'italique (sauf Markdown, D20) : la mise en page ne bouge pas quand un mot change de rôle. Au-delà de 4 Mo le texte n'est pas colorié (la barre d'état le dit). Écarté : tree-sitter ou toute bibliothèque (D1).
 
 ## L'interface
 
@@ -33,18 +33,23 @@ Journal des choix structurants. Chaque entrée : le choix, pourquoi, et ce qu'on
 - **D18 — L'icône est dessinée par un script** (`Scripts/make-icon.swift`) : la tuile sombre de la famille, cinq lignes de code ambre et cyan, le curseur rouge de la tête de lecture de SimpleAudio.
 - **D19 — Commits par phase, jamais de push** sans Adrien ; `swift build` et `swift test` verts à chaque commit.
 
+## Markdown
+
+- **D20 — Le Markdown est mis en forme dans la source, le balisage reste visible** (24 octobre 2026, à la demande d'Adrien : « affiché et édité interprété »). Le surligneur, pour le seul lexer qui déclare `usesFonts`, change aussi les polices : titres en gras et plus grands (×1,4, ×1,25, ×1,1, puis gras seul), gras, italique (la face italique de la police, sinon une pente), barré `~~…~~`, liens soulignés, code en ligne sur une tuile, puces en gras ; les marqueurs (`#`, `**`, `*`, `` ` ``, `~~`) sont estompés pour que les mots ressortent. Même police que le reste de l'éditeur, donc les tableaux et le code restent alignés. Chaque ligne repart d'une police nue avant ses jetons, et quitter Markdown remet tout en une seule police (tests). Écarté : un WYSIWYG qui cache le balisage (c'est MarkText, une autre application) et un aperçu rendu à part (le texte ne serait plus édité « interprété »).
+
 ## Remis à plus tard
 
 - Barre latérale de dossier et recherche dans un projet.
 - Pilotage OSC / MCP comme SimpleAudio : rien à piloter dans un éditeur de texte.
 - Thème clair.
+- Markdown : aperçu rendu à part, tableaux alignés, images, liens cliquables, cases à cocher par clic, pliage.
 - Complétion de mots, pliage de code, mini-carte.
 
 ## Constaté
 
 - MarkText 0.24 (Electron), la référence écartée : 412 Mo empaqueté, 6,8 Mo de JavaScript dans le renderer.
 - SimpleText 0.9.0, 23 octobre 2026 : `build/SimpleText.app` **3,0 Mo** (binaire universel arm64 + x86_64 de 2,5 Mo), signé Apple Development ; du lancement du binaire empaqueté à la capture d'un fichier Swift ouvert, **0,67 s** (`--snapshot`, délai 50 ms). En release, 1 Mo de Swift (36 000 lignes) se lexe en 44 ms et se colore en 226 ms ; un journal de 3,2 Mo (40 000 lignes) s'ouvre et se parcourt sans attente.
-- 35 tests (`swift test`, ~2 s) : fichiers texte et encodages, index de lignes, indentation, langages, lexers (Swift, Objective-C, C, C#, HTML, PHP, Markdown, et les courants), document, éditeur, coloration incrémentale, panneau d'ouverture, menu récents, réinterprétation d'encodage.
+- 36 tests (`swift test`, ~2 s) : fichiers texte et encodages, index de lignes, indentation, langages, lexers (Swift, Objective-C, C, C#, HTML, PHP, Markdown, et les courants), document, éditeur, coloration incrémentale, mise en forme du Markdown, panneau d'ouverture, réinterprétation d'encodage.
 - Un `NSOpenPanel` ne se retient pas depuis Swift : référence faible (plantage `swift_unknownObjectWeakAssign`) comme référence forte (pointeur pendant à l'affectation suivante, toutes les instances de `DocumentController` étant le singleton d'`NSDocumentController`). La case « fichiers masqués » vit donc dans une vue accessoire que le panneau possède, avec un `unowned(unsafe)` vers lui.
 - `flush()` du surligneur bouclait sans fin sur un document sans lexer : la plage sale est vidée quand il n'y a rien à colorer (test).
 - Les menus ne se photographient pas : `SIMPLETEXT_SNAPSHOT_MENU=Fichier` ouvre le menu un instant et liste ses éléments. C'est ainsi que le double « Ouvrir l'élément récent » a été vu dans le binaire empaqueté (23 octobre 2026) et pas dans le debug, qui n'a pas d'`Info.plist`.

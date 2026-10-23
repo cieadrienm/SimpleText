@@ -155,6 +155,79 @@ struct HighlighterTests {
         #expect(controller.highlighter.line(containing: 20) == 2)
     }
 
+    private func font(at offset: Int, in document: TextDocument) -> NSFont? {
+        document.textStorage.attribute(.font, at: offset, effectiveRange: nil) as? NSFont
+    }
+
+    private func isBold(_ font: NSFont?) -> Bool {
+        font?.fontDescriptor.symbolicTraits.contains(.bold) == true
+    }
+
+    /// "# Titre" / "**gras** *ital* ~~x~~ `c` [l](u)" / "- item": offsets used by the Markdown tests.
+    private static let markdown = "# Titre\n**gras** *ital* ~~x~~ `c` [l](u)\n- item"
+
+    @Test("Markdown is formatted in place: heading, strong, emphasis, strike, code, link, list marker")
+    func markdownFormatting() {
+        let document = TextDocument()
+        document.languageOverride = Language.named("Markdown")
+        document.replaceText(with: Self.markdown)
+        let controller = EditorViewController(document: document)
+        controller.loadView()
+        let base = Preferences.editorFont
+        let heading = font(at: 2, in: document)
+        #expect(isBold(heading))
+        #expect(heading?.pointSize == base.pointSize * 1.4)
+        #expect(color(at: 0, in: document) == Theme.textFaint)     // the # fades
+        #expect(color(at: 2, in: document) == Theme.accent)
+        #expect(isBold(font(at: 10, in: document)))                 // gras
+        #expect(font(at: 10, in: document)?.pointSize == base.pointSize)
+        #expect(color(at: 8, in: document) == Theme.textFaint)     // **
+        let emphasis = font(at: 18, in: document)                   // ital
+        let slanted = emphasis?.fontDescriptor.symbolicTraits.contains(.italic) == true
+            || document.textStorage.attribute(.obliqueness, at: 18, effectiveRange: nil) != nil
+        #expect(slanted)
+        #expect(document.textStorage.attribute(.strikethroughStyle, at: 26, effectiveRange: nil) as? Int == 1)
+        #expect(document.textStorage.attribute(.backgroundColor, at: 31, effectiveRange: nil) as? NSColor == Theme.laneAlt)
+        #expect(document.textStorage.attribute(.underlineStyle, at: 35, effectiveRange: nil) as? Int == 1)
+        #expect(isBold(font(at: 41, in: document)))                 // the list dash
+        #expect(!isBold(font(at: 43, in: document)))                // item
+        #expect(!document.isDocumentEdited)
+        // Removing the closing ** puts the word back in the base font.
+        controller.textView.insertText("", replacementRange: NSRange(location: 14, length: 2))
+        RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.05))
+        #expect(!isBold(font(at: 10, in: document)))
+        #expect(color(at: 10, in: document) == Theme.text)
+    }
+
+    @Test("Other languages keep one font; leaving Markdown or changing the font keeps the styles right")
+    func fontsFollowLexerAndPreferences() {
+        let document = TextDocument()
+        document.languageOverride = Language.named("Markdown")
+        document.replaceText(with: Self.markdown)
+        let controller = EditorViewController(document: document)
+        controller.loadView()
+        let base = Preferences.editorFont
+        // A bigger editor font scales the heading with it.
+        UserDefaults.standard.set(Double(base.pointSize + 2), forKey: "fontSize")
+        defer { UserDefaults.standard.removeObject(forKey: "fontSize") }
+        controller.applyPreferences()
+        controller.highlighter.flush()
+        #expect(font(at: 2, in: document)?.pointSize == (base.pointSize + 2) * 1.4)
+        #expect(font(at: 43, in: document)?.pointSize == base.pointSize + 2)
+        // Swift gets the one font everywhere, heading included.
+        document.languageOverride = Language.named("Swift")
+        controller.refreshDocumentState()
+        controller.highlighter.flush()
+        var names = Set<String>()
+        var sizes = Set<CGFloat>()
+        document.textStorage.enumerateAttribute(.font, in: NSRange(location: 0, length: document.textStorage.length)) { value, _, _ in
+            if let font = value as? NSFont { names.insert(font.fontName); sizes.insert(font.pointSize) }
+        }
+        #expect(names.count == 1 && !isBold(font(at: 2, in: document)))
+        #expect(sizes == [base.pointSize + 2])
+        #expect(document.textStorage.attribute(.underlineStyle, at: 35, effectiveRange: nil) == nil)
+    }
+
     @Test("A document without a lexer is left plain and flush returns at once")
     func plainText() {
         let document = TextDocument()

@@ -54,7 +54,8 @@ final class EditorTextView: NSTextView {
             && !isGrammarCheckingEnabled && !smartInsertDeleteEnabled
     }
 
-    /// One font and one tab width for the whole text; token colours set by the highlighter are kept.
+    /// One font and one tab width for the whole text; the highlighter keeps its colours and puts its
+    /// Markdown fonts back afterwards.
     func applyFont(_ font: NSFont, tabWidth: Int) {
         self.tabWidth = tabWidth
         self.font = font
