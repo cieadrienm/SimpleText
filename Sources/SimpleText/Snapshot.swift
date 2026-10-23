@@ -1,0 +1,73 @@
+import AppKit
+
+/// `SimpleText --snapshot out.png [file]`: opens the file (or a sample), renders the window, exits.
+/// The only way to look at the app without a screen (DECISIONS.md).
+enum Snapshot {
+    static let sample = """
+    // SimpleText — aperçu
+    import Foundation
+
+    struct Clip {
+        var name: String
+        var gain: Float = 0.5
+
+        func describe() -> String {
+            "\\(name) à \\(gain) dB"   // interpolation
+        }
+    }
+    """
+
+    /// What the window server shows (title bar included); the view cache when the window is off screen.
+    static func render(_ window: NSWindow) -> Data? {
+        let windowID = CGWindowID(window.windowNumber)
+        if let image = CGWindowListCreateImage(.null, .optionIncludingWindow, windowID, [.boundsIgnoreFraming, .bestResolution]),
+           image.width > 1 {
+            return NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:])
+        }
+        guard let view = window.contentView, let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { return nil }
+        view.cacheDisplay(in: view.bounds, to: rep)
+        return rep.representation(using: .png, properties: [:])
+    }
+
+    static func run(output: String, input: String?) {
+        let controller = NSDocumentController.shared
+        let finish: (NSDocument?) -> Void = { document in
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                guard let window = document?.windowControllers.first?.window ?? NSApp.windows.first,
+                      let view = window.contentView else {
+                    fputs("snapshot error: no window\n", stderr)
+                    exit(2)
+                }
+                view.layoutSubtreeIfNeeded()
+                view.displayIfNeeded()
+                guard let png = render(window) else { exit(3) }
+                let url = URL(fileURLWithPath: (output as NSString).expandingTildeInPath)
+                do {
+                    try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+                    try png.write(to: url, options: .atomic)
+                    print("snapshot written to \(url.path) (\(png.count) bytes)")
+                    exit(0)
+                } catch {
+                    fputs("snapshot error: \(error)\n", stderr)
+                    exit(1)
+                }
+            }
+        }
+        if let input, !input.isEmpty {
+            let url = URL(fileURLWithPath: (input as NSString).expandingTildeInPath)
+            controller.openDocument(withContentsOf: url, display: true) { document, _, error in
+                if let error {
+                    fputs("snapshot error: \(error.localizedDescription)\n", stderr)
+                    exit(1)
+                }
+                (document as? TextDocument)?.windowControllers.first?.window?.setContentSize(NSSize(width: 1180, height: 740))
+                finish(document)
+            }
+        } else {
+            let document = try? controller.openUntitledDocumentAndDisplay(true) as? TextDocument
+            document?.replaceText(with: sample)
+            document?.windowControllers.first?.window?.setContentSize(NSSize(width: 1180, height: 740))
+            finish(document)
+        }
+    }
+}
