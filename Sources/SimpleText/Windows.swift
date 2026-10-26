@@ -1,4 +1,5 @@
 import AppKit
+import SimpleTextCore
 import SwiftUI
 import WebKit
 
@@ -6,12 +7,12 @@ import WebKit
 @MainActor
 class HostedWindowController {
     private(set) var window: NSWindow?
-    private let title: String
+    private let titleProvider: () -> String
     private let size: NSSize
     private let autosaveName: String
 
-    init(title: String, size: NSSize, autosaveName: String) {
-        self.title = title
+    init(title: @escaping () -> String, size: NSSize, autosaveName: String) {
+        self.titleProvider = title
         self.size = size
         self.autosaveName = autosaveName
     }
@@ -19,6 +20,7 @@ class HostedWindowController {
     func show<Content: View>(_ content: () -> Content, resizable: Bool = false) {
         let hosting = NSHostingView(rootView: content().preferredColorScheme(.dark))
         if let window {
+            window.title = titleProvider()
             window.contentView = hosting
             window.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
@@ -28,7 +30,7 @@ class HostedWindowController {
         var style: NSWindow.StyleMask = [.titled, .closable]
         if resizable { style.insert(.resizable) }
         let window = NSWindow(contentRect: hosting.frame, styleMask: style, backing: .buffered, defer: false)
-        window.title = title
+        window.title = titleProvider()
         window.appearance = NSAppearance(named: .darkAqua)
         window.backgroundColor = Theme.panel
         window.titlebarAppearsTransparent = true
@@ -42,6 +44,10 @@ class HostedWindowController {
         self.window = window
     }
 
+    func refreshLanguage() {
+        window?.title = titleProvider()
+    }
+
     func close() {
         window?.close()
     }
@@ -50,7 +56,11 @@ class HostedWindowController {
 /// SimpleText ▸ À propos de SimpleText.
 @MainActor
 final class AboutWindowController: HostedWindowController {
-    static let shared = AboutWindowController(title: "À propos de SimpleText", size: NSSize(width: 580, height: 420), autosaveName: "SimpleTextAbout")
+    static let shared = AboutWindowController(
+        title: { L("À propos de SimpleText", "About SimpleText") },
+        size: NSSize(width: 580, height: 420),
+        autosaveName: "SimpleTextAbout"
+    )
 
     func show() {
         show({ AboutView(close: { [weak self] in self?.close() }) })
@@ -60,7 +70,11 @@ final class AboutWindowController: HostedWindowController {
 /// Aide ▸ Raccourcis clavier (⌘/).
 @MainActor
 final class ShortcutsWindowController: HostedWindowController {
-    static let shared = ShortcutsWindowController(title: "Raccourcis clavier", size: NSSize(width: 820, height: 520), autosaveName: "SimpleTextShortcuts")
+    static let shared = ShortcutsWindowController(
+        title: { L("Raccourcis clavier", "Keyboard Shortcuts") },
+        size: NSSize(width: 820, height: 520),
+        autosaveName: "SimpleTextShortcuts"
+    )
 
     func show() {
         show({ ShortcutsView(close: { [weak self] in self?.close() }) })
@@ -70,10 +84,28 @@ final class ShortcutsWindowController: HostedWindowController {
 /// SimpleText ▸ Réglages… (⌘,).
 @MainActor
 final class SettingsWindowController: HostedWindowController {
-    static let shared = SettingsWindowController(title: "Réglages", size: NSSize(width: 460, height: 500), autosaveName: "SimpleTextSettings")
+    static let shared = SettingsWindowController(
+        title: { L("Réglages", "Settings") },
+        size: NSSize(width: 460, height: 610),
+        autosaveName: "SimpleTextSettings"
+    )
 
     func show() {
         show({ SettingsView() })
+    }
+}
+
+/// SimpleText ▸ Rechercher des mises à jour…
+@MainActor
+final class UpdateWindowController: HostedWindowController {
+    static let shared = UpdateWindowController(
+        title: { L("Mise à jour de SimpleText", "SimpleText Update") },
+        size: NSSize(width: 480, height: 340),
+        autosaveName: "SimpleTextUpdate"
+    )
+
+    func show() {
+        show({ UpdateView(close: { [weak self] in self?.close() }) })
     }
 }
 
@@ -100,6 +132,7 @@ final class HelpWindowController: NSObject, WKNavigationDelegate {
         components.fragment = section
         let url = components.url ?? page
         if let window, let webView {
+            window.title = L("Aide SimpleText", "SimpleText Help")
             if let section {
                 webView.evaluateJavaScript("location.hash = '\(section)'")
             } else if webView.url == nil {
@@ -119,7 +152,7 @@ final class HelpWindowController: NSObject, WKNavigationDelegate {
             backing: .buffered,
             defer: false
         )
-        window.title = "Aide SimpleText"
+        window.title = L("Aide SimpleText", "SimpleText Help")
         window.contentView = webView
         window.appearance = NSAppearance(named: .darkAqua)
         window.backgroundColor = Theme.background
@@ -130,6 +163,10 @@ final class HelpWindowController: NSObject, WKNavigationDelegate {
         window.fadeIn()
         self.window = window
         self.webView = webView
+    }
+
+    func refreshLanguage() {
+        window?.title = L("Aide SimpleText", "SimpleText Help")
     }
 
     /// Links to the web open in the browser; the guide's own pages stay here.

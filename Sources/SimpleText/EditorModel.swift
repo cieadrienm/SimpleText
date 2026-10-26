@@ -28,4 +28,5 @@ struct StatusBarActions {
     var showHelp: () -> Void = {}
     var showShortcuts: () -> Void = {}
     var showAbout: () -> Void = {}
+    var showUpdate: () -> Void = {}
 }

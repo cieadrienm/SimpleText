@@ -31,6 +31,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             Snapshot.run(output: snapshotRequest.output, input: snapshotRequest.input)
             return
         }
+        SimpleUpdater.shared.presentUpdateUI = {
+            UpdateWindowController.shared.show()
+        }
+        SimpleUpdater.shared.checkForUpdatesOnLaunchIfNeeded()
         NSApp.activate(ignoringOtherApps: true)
     }
 
@@ -48,6 +52,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         for name in filenames {
             if skip > 0 { skip -= 1; continue }
             if name == "--snapshot" { skip = 2; continue }
+            if name == "--lang" { skip = 1; continue }
             if name.hasPrefix("--") { continue }
             if name.hasPrefix("-") { skip = 1; continue }   // `-key value`, read by UserDefaults
             let url = URL(fileURLWithPath: name)
@@ -64,6 +69,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         AboutWindowController.shared.show()
     }
 
+    @objc func checkForUpdates(_ sender: Any?) {
+        UpdateWindowController.shared.show()
+        Task {
+            await SimpleUpdater.shared.checkForUpdates(userInitiated: true)
+        }
+    }
+
     @objc func showSettings(_ sender: Any?) {
         SettingsWindowController.shared.show()
     }
@@ -74,5 +86,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc func showShortcuts(_ sender: Any?) {
         ShortcutsWindowController.shared.show()
+    }
+
+    @objc func openSimpleAppsWebsite(_ sender: Any?) {
+        if let url = URL(string: "https://adrien-m.net/software") {
+            NSWorkspace.shared.open(url)
+        }
     }
 }

@@ -3,6 +3,7 @@
 SimpleText est un éditeur de texte et de code natif pour macOS (Swift, AppKit, TextKit 2, zéro dépendance), de la famille des apps Simple de la cie Adrien M (SimpleAudio, Simple Recorder, OSCScore, Montage). Adrien (spectacle vivant, app eMotion) est l'unique utilisateur ; il parle français et refuse Electron.
 
 ## Lire d'abord
+- `~/Programmation/SimpleFamily/GUIDELINES.md` — les règles communes de la famille Simple (G1…).
 - `DECISIONS.md` — D1…, le pourquoi de chaque choix, et ce qui est remis à plus tard. **Ajouter une entrée pour tout choix structurant.**
 - `docs/superpowers/specs/2026-10-23-simpletext-design.md` — le design et ses phases.
 - `README.md` — fonctionnalités et raccourcis.

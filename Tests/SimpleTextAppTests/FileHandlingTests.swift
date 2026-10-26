@@ -69,4 +69,23 @@ struct FileHandlingTests {
         #expect(document.isDocumentEdited)
         #expect(try document.data(ofType: DocumentController.textType) == "caf\u{E9} \u{201C}ok\u{201D}".data(using: .windowsCP1252))
     }
+
+    @Test("Menus and open panel rebuild in French and English")
+    func menuLocalization() {
+        let saved = Localization.current
+        defer { Preferences.setLanguage(saved) }
+        let delegate = AppDelegate()
+
+        Preferences.setLanguage(.fr)
+        let frMenu = MainMenu.build(delegate: delegate)
+        #expect(frMenu.items.map(\.title) == ["SimpleText", "Fichier", "Édition", "Format", "Présentation", "Fenêtre", "Aide"])
+        #expect(frMenu.items.first?.submenu?.items[1].title == "Rechercher des mises à jour…")
+        #expect(frMenu.items.last?.submenu?.items.last?.title == "Site web Simple Apps (adrien-m.net/software)")
+
+        Preferences.setLanguage(.en)
+        let enMenu = MainMenu.build(delegate: delegate)
+        #expect(enMenu.items.map(\.title) == ["SimpleText", "File", "Edit", "Format", "View", "Window", "Help"])
+        #expect(enMenu.items.first?.submenu?.items[1].title == "Check for Updates…")
+        #expect(enMenu.items.last?.submenu?.items.last?.title == "Simple Apps Website (adrien-m.net/software)")
+    }
 }

@@ -7,16 +7,18 @@ struct StatusBar: View {
     var model: EditorModel
     let actions: StatusBarActions
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AppStorage(Localization.defaultsKey) private var languageRaw = AppLanguage.system.rawValue
 
     var body: some View {
+        let _ = languageRaw
         HStack(spacing: 12) {
             if model.isRichText {
                 pill("RTF", tint: Theme.accent)
-                    .help("Texte enrichi : polices et couleurs du fichier")
+                    .help(L("Texte enrichi : polices et couleurs du fichier", "Rich text: fonts and colors from the file"))
             } else {
                 Menu {
                     ForEach(Language.all) { language in
-                        Button(language.name) { actions.pickLanguage(language.name) }
+                        Button(language.displayName) { actions.pickLanguage(language.name) }
                     }
                 } label: {
                     pill(model.languageName, tint: Theme.accent)
@@ -25,7 +27,7 @@ struct StatusBar: View {
                 .buttonStyle(.plain)
                 .menuIndicator(.hidden)
                 .fixedSize()
-                .help("Langage de coloration de ce document")
+                .help(L("Langage de coloration de ce document", "Syntax highlighting language for this document"))
             }
 
             Text("Ln \(model.line), Col \(model.column)")
@@ -46,51 +48,60 @@ struct StatusBar: View {
                 .lineLimit(1)
 
             if !model.highlighted {
-                Text("sans coloration")
+                Text(L("sans coloration", "no highlighting"))
                     .foregroundStyle(Theme.textFaint.swiftUI)
-                    .help("Au-delà de 4 Mo le texte n’est pas colorié")
+                    .help(L("Au-delà de 4 Mo le texte n’est pas colorié", "Above 4 MB, text is not highlighted"))
             }
 
             if !model.isRichText {
-            divider
+                divider
 
-            Menu {
-                ForEach(TextFile.encodings, id: \.rawValue) { encoding in
-                    Button(TextFile.name(of: encoding)) { actions.pickEncoding(encoding.rawValue) }
+                Menu {
+                    ForEach(TextFile.encodings, id: \.rawValue) { encoding in
+                        Button(TextFile.name(of: encoding)) { actions.pickEncoding(encoding.rawValue) }
+                    }
+                } label: {
+                    Text(model.encodingName).foregroundStyle(Theme.textDim.swiftUI)
                 }
-            } label: {
-                Text(model.encodingName).foregroundStyle(Theme.textDim.swiftUI)
-            }
-            .menuStyle(.button)
-            .buttonStyle(.plain)
-            .menuIndicator(.hidden)
-            .fixedSize()
-            .help("Encodage du fichier ; un document non modifié est relu dans l’encodage choisi")
+                .menuStyle(.button)
+                .buttonStyle(.plain)
+                .menuIndicator(.hidden)
+                .fixedSize()
+                .help(L("Encodage du fichier ; un document non modifié est relu dans l’encodage choisi", "File encoding; an unmodified document is reloaded in the chosen encoding"))
 
-            Menu {
-                ForEach(LineEnding.allCases, id: \.rawValue) { ending in
-                    Button(ending.label) { actions.pickLineEnding(ending.rawValue) }
+                Menu {
+                    ForEach(LineEnding.allCases, id: \.rawValue) { ending in
+                        Button(ending.label) { actions.pickLineEnding(ending.rawValue) }
+                    }
+                } label: {
+                    Text(model.lineEndingName).foregroundStyle(Theme.textDim.swiftUI)
                 }
-            } label: {
-                Text(model.lineEndingName).foregroundStyle(Theme.textDim.swiftUI)
-            }
-            .menuStyle(.button)
-            .buttonStyle(.plain)
-            .menuIndicator(.hidden)
-            .fixedSize()
-            .help("Fins de ligne écrites à l’enregistrement")
+                .menuStyle(.button)
+                .buttonStyle(.plain)
+                .menuIndicator(.hidden)
+                .fixedSize()
+                .help(L("Fins de ligne écrites à l’enregistrement", "Line endings written when saving"))
 
-            Text(model.indentLabel)
-                .foregroundStyle(Theme.textDim.swiftUI)
-                .help("Indentation lue dans le fichier")
+                Text(model.indentLabel)
+                    .foregroundStyle(Theme.textDim.swiftUI)
+                    .help(L("Indentation lue dans le fichier", "Indentation detected in the file"))
             }
 
             divider
 
             HStack(spacing: 12) {
-                statusButton("? aide", help: "Ouvrir le guide de SimpleText (⌘?)", action: actions.showHelp)
-                statusButton("⌘/ raccourcis", help: "Afficher les raccourcis clavier (⌘/)", action: actions.showShortcuts)
-                statusButton(AppVersion.shortLabel, help: "À propos de \(AppVersion.description)", action: actions.showAbout)
+                if let release = SimpleUpdater.shared.availableRelease {
+                    Button {
+                        actions.showUpdate()
+                    } label: {
+                        pill("↑ v\(release.version)", tint: Theme.accent)
+                    }
+                    .buttonStyle(.plain)
+                    .help(L("Mise à jour v\(release.version) disponible — cliquer pour installer", "Update v\(release.version) available — click to install"))
+                }
+                statusButton(L("? aide", "? help"), help: L("Ouvrir le guide de SimpleText (⌘?)", "Open the SimpleText guide (⌘?)"), action: actions.showHelp)
+                statusButton(L("⌘/ raccourcis", "⌘/ shortcuts"), help: L("Afficher les raccourcis clavier (⌘/)", "Show keyboard shortcuts (⌘/)"), action: actions.showShortcuts)
+                statusButton(AppVersion.shortLabel, help: L("À propos de \(AppVersion.description)", "About \(AppVersion.description)"), action: actions.showAbout)
             }
         }
         .font(.system(size: 10.5, design: .monospaced))
@@ -106,14 +117,14 @@ struct StatusBar: View {
     }
 
     private var selectionText: String {
-        let characters = model.selectedCharacters == 1 ? "1 caractère" : "\(model.selectedCharacters) caractères"
-        return model.selectedLines > 1 ? "\(characters) · \(model.selectedLines) lignes" : characters
+        let characters = model.selectedCharacters == 1 ? L("1 caractère", "1 character") : L("\(model.selectedCharacters) caractères", "\(model.selectedCharacters) characters")
+        return model.selectedLines > 1 ? L("\(characters) · \(model.selectedLines) lignes", "\(characters) · \(model.selectedLines) lines") : characters
     }
 
     private var countsText: String {
-        let lines = model.lines == 1 ? "1 ligne" : "\(model.lines) lignes"
+        let lines = model.lines == 1 ? L("1 ligne", "1 line") : L("\(model.lines) lignes", "\(model.lines) lines")
         guard let words = model.words else { return lines }
-        return "\(lines) · \(words == 1 ? "1 mot" : "\(words) mots")"
+        return "\(lines) · \(words == 1 ? L("1 mot", "1 word") : L("\(words) mots", "\(words) words"))"
     }
 
     private var divider: some View {

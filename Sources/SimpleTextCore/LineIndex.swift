@@ -77,7 +77,7 @@ public struct IndentStyle: Equatable, Sendable {
 
     public var unit: String { usesTabs ? "\t" : String(repeating: " ", count: width) }
 
-    public var label: String { usesTabs ? "Tabulations" : "Espaces : \(width)" }
+    public var label: String { usesTabs ? L("Tabulations", "Tabs") : L("Espaces : \(width)", "Spaces: \(width)") }
 
     /// Tabs when the first indented lines use them, else the smallest indent seen (2, 3, 4 or 8); `fallback` otherwise.
     public static func detect(in text: String, fallback: IndentStyle) -> IndentStyle {

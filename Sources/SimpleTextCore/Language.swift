@@ -20,6 +20,10 @@ public struct Language: Equatable, Identifiable, Sendable {
 
     public var id: String { name }
 
+    public var displayName: String {
+        name == "Texte brut" ? L("Texte brut", "Plain Text") : name
+    }
+
     public init(
         _ name: String,
         extensions: [String],
@@ -78,7 +82,8 @@ public struct Language: Equatable, Identifiable, Sendable {
     ]
 
     public static func named(_ name: String) -> Language? {
-        all.first { $0.name == name }
+        if name == "Plain Text" { return plainText }
+        return all.first { $0.name == name }
     }
 
     /// The language a file name points at; plain text when nothing matches.

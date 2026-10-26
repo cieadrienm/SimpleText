@@ -112,4 +112,24 @@ struct LineIndexTests {
         #expect(Language.forFile(named: "data.bin").name == "Texte brut")
         #expect(Language.named("Swift")?.lineComment == "//")
     }
+
+    @Test("Bilingual localization switches between French and English")
+    func localization() {
+        let saved = Localization.current
+        defer { Localization.current = saved }
+
+        Localization.current = .fr
+        #expect(!Localization.isEnglish)
+        #expect(L("Fichier", "File") == "Fichier")
+        #expect(Language.plainText.displayName == "Texte brut")
+        #expect(IndentStyle(usesTabs: true, width: 4).label == "Tabulations")
+        #expect(IndentStyle(usesTabs: false, width: 4).label == "Espaces : 4")
+
+        Localization.current = .en
+        #expect(Localization.isEnglish)
+        #expect(L("Fichier", "File") == "File")
+        #expect(Language.plainText.displayName == "Plain Text")
+        #expect(IndentStyle(usesTabs: true, width: 4).label == "Tabs")
+        #expect(IndentStyle(usesTabs: false, width: 4).label == "Spaces: 4")
+    }
 }

@@ -102,6 +102,10 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, NSMenuIt
         observers.append(center.addObserver(forName: Preferences.changed, object: nil, queue: .main) { [weak self] _ in
             self?.applyPreferences()
         })
+        observers.append(center.addObserver(forName: Localization.didChangeNotification, object: nil, queue: .main) { [weak self] _ in
+            self?.applyPreferences()
+            self?.refreshDocumentState()
+        })
         observers.append(center.addObserver(forName: UserDefaults.didChangeNotification, object: nil, queue: .main) { [weak self] _ in
             self?.applyPreferences()
         })
@@ -135,8 +139,9 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, NSMenuIt
         highlighter.hidesMarkup = Preferences.hideMarkdownMarkup
         if textView.indentStyleFromPreferences {
             textView.indentStyle = Preferences.indentStyle
-            model.indentLabel = textView.indentStyle.label
         }
+        model.indentLabel = textView.indentStyle.label
+        model.languageName = document.isRichText ? "RTF" : document.language.displayName
         // Defaults change on every window move (frame autosave): only a real change re-tiles the text.
         if lastWordWrap != Preferences.wordWrap {
             lastWordWrap = Preferences.wordWrap
@@ -195,7 +200,7 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, NSMenuIt
             highlighter.lexer = Lexers.lexer(for: language)
         }
         model.isRichText = document.isRichText
-        model.languageName = document.isRichText ? "RTF" : document.language.name
+        model.languageName = document.isRichText ? "RTF" : document.language.displayName
         model.encodingName = TextFile.name(of: document.encoding) + (document.hasBOM ? " · BOM" : "")
         model.lineEndingName = document.lineEnding.rawValue
         model.indentLabel = textView.indentStyle.label
@@ -244,6 +249,7 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, NSMenuIt
         actions.showHelp = { (NSApp.delegate as? AppDelegate)?.showHelp(nil) }
         actions.showShortcuts = { (NSApp.delegate as? AppDelegate)?.showShortcuts(nil) }
         actions.showAbout = { (NSApp.delegate as? AppDelegate)?.showAbout(nil) }
+        actions.showUpdate = { UpdateWindowController.shared.show() }
         return actions
     }
 
@@ -346,10 +352,10 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, NSMenuIt
     @objc func goToLine(_ sender: Any?) {
         guard let window = view.window else { return }
         let alert = NSAlert()
-        alert.messageText = "Aller à la ligne"
-        alert.informativeText = "Numéro de ligne, de 1 à \(lineIndex().lineCount)."
-        alert.addButton(withTitle: "Aller")
-        alert.addButton(withTitle: "Annuler")
+        alert.messageText = L("Aller à la ligne", "Go to Line")
+        alert.informativeText = L("Numéro de ligne, de 1 à \(lineIndex().lineCount).", "Line number, from 1 to \(lineIndex().lineCount).")
+        alert.addButton(withTitle: L("Aller", "Go"))
+        alert.addButton(withTitle: L("Annuler", "Cancel"))
         let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 160, height: 24))
         field.placeholderString = "\(model.line)"
         field.alignment = .right
@@ -381,8 +387,8 @@ final class EditorViewController: NSViewController, NSTextViewDelegate, NSMenuIt
             item.state = (item.representedObject as? String) == document.lineEnding.rawValue ? .on : .off
             return !document.isRichText
         case #selector(toggleRichText(_:)):
-            item.title = document.isRichText ? "Convertir en texte brut" : "Convertir en texte enrichi"
-            if document.fileURL != nil { item.title += " (copie)" }
+            item.title = document.isRichText ? L("Convertir en texte brut", "Make Plain Text") : L("Convertir en texte enrichi", "Make Rich Text")
+            if document.fileURL != nil { item.title += L(" (copie)", " (copy)") }
         default:
             break
         }

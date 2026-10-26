@@ -121,7 +121,7 @@ final class TextDocument: NSDocument {
         fileType = rich ? Self.rtfType : DocumentController.textType
         textStorage.setAttributedString(content)
         undoManager?.registerUndo(withTarget: self) { $0.apply(richText: wasRich, content: previous, undoing: content) }
-        undoManager?.setActionName(rich ? "Convertir en texte enrichi" : "Convertir en texte brut")
+        undoManager?.setActionName(rich ? L("Convertir en texte enrichi", "Make Rich Text") : L("Convertir en texte brut", "Make Plain Text"))
         NotificationCenter.default.post(name: Self.textDidReload, object: self)
     }
 

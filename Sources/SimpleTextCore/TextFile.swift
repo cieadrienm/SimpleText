@@ -18,7 +18,7 @@ public enum LineEnding: String, CaseIterable, Sendable {
         switch self {
         case .lf: return "LF (Unix, macOS)"
         case .crlf: return "CRLF (Windows)"
-        case .cr: return "CR (Mac classique)"
+        case .cr: return L("CR (Mac classique)", "CR (Classic Mac)")
         }
     }
 
@@ -66,17 +66,17 @@ public enum TextFileError: LocalizedError {
 
     public var errorDescription: String? {
         switch self {
-        case .binary: return "Ce fichier n’est pas un fichier texte."
-        case .undecodable: return "Le texte de ce fichier n’a pu être décodé dans aucun encodage connu."
-        case .unencodable(let encoding): return "Certains caractères n’existent pas en \(TextFile.name(of: encoding))."
+        case .binary: return L("Ce fichier n’est pas un fichier texte.", "This file is not a text file.")
+        case .undecodable: return L("Le texte de ce fichier n’a pu être décodé dans aucun encodage connu.", "The text in this file could not be decoded with any known encoding.")
+        case .unencodable(let encoding): return L("Certains caractères n’existent pas en \(TextFile.name(of: encoding)).", "Some characters cannot be encoded in \(TextFile.name(of: encoding)).")
         }
     }
 
     public var recoverySuggestion: String? {
         switch self {
-        case .binary: return "SimpleText n’ouvre que du texte ; les images, archives et exécutables sont refusés."
+        case .binary: return L("SimpleText n’ouvre que du texte ; les images, archives et exécutables sont refusés.", "SimpleText only opens text files; images, archives and executables are refused.")
         case .undecodable: return nil
-        case .unencodable: return "Choisissez UTF-8 dans la barre d’état avant d’enregistrer."
+        case .unencodable: return L("Choisissez UTF-8 dans la barre d’état avant d’enregistrer.", "Choose UTF-8 in the status bar before saving.")
         }
     }
 }

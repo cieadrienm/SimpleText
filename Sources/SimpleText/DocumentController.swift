@@ -45,7 +45,7 @@ final class DocumentController: NSDocumentController {
         panel.treatsFilePackagesAsDirectories = true
         panel.allowedContentTypes = []
         panel.showsHiddenFiles = Preferences.showHiddenFiles
-        panel.message = "Tout fichier texte peut être ouvert, quelle que soit son extension."
+        panel.message = L("Tout fichier texte peut être ouvert, quelle que soit son extension.", "Any text file can be opened, whatever its extension.")
 
         panel.accessoryView = HiddenFilesAccessory(panel: panel)
         panel.isAccessoryViewDisclosed = true
@@ -60,7 +60,7 @@ final class HiddenFilesAccessory: NSView {
 
     init(panel: NSSavePanel) {
         self.panel = panel
-        checkbox = NSButton(checkboxWithTitle: "Afficher les fichiers masqués", target: nil, action: nil)
+        checkbox = NSButton(checkboxWithTitle: L("Afficher les fichiers masqués", "Show hidden files"), target: nil, action: nil)
         checkbox.state = Preferences.showHiddenFiles ? .on : .off
         checkbox.sizeToFit()
         super.init(frame: NSRect(x: 0, y: 0, width: checkbox.frame.width + 40, height: 36))
